@@ -5,6 +5,7 @@ import com.dayandnight.dayandnightserver.dto.CreateDanmakuDTO;
 import com.dayandnight.dayandnightserver.dto.UpdateCommentDTO;
 import com.dayandnight.dayandnightserver.service.DanmakuService;
 import com.dayandnight.dayandnightserver.vo.DanmakuVO;
+import com.dayandnight.dayandnightserver.vo.PageResult;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -13,9 +14,8 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 @RestController
 public class DanmakuController {
@@ -27,8 +27,12 @@ public class DanmakuController {
     }
 
     @GetMapping("/api/posts/{postId}/danmaku")
-    public List<DanmakuVO> listForPost(@PathVariable long postId, HttpServletRequest httpRequest) {
-        return danmakuService.listForPost(postId, ClientAddresses.resolve(httpRequest));
+    public PageResult<DanmakuVO> listForPost(
+            @PathVariable long postId,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size,
+            HttpServletRequest httpRequest) {
+        return danmakuService.listForPost(postId, page, size, ClientAddresses.resolve(httpRequest));
     }
 
     @PostMapping("/api/posts/{postId}/danmaku")
@@ -40,8 +44,11 @@ public class DanmakuController {
     }
 
     @GetMapping("/api/danmaku/map")
-    public List<DanmakuVO> listMap(HttpServletRequest httpRequest) {
-        return danmakuService.listMap(ClientAddresses.resolve(httpRequest));
+    public PageResult<DanmakuVO> listMap(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size,
+            HttpServletRequest httpRequest) {
+        return danmakuService.listMap(page, size, ClientAddresses.resolve(httpRequest));
     }
 
     @PostMapping("/api/danmaku")
@@ -50,8 +57,11 @@ public class DanmakuController {
     }
 
     @GetMapping("/api/danmaku")
-    public List<DanmakuVO> recent(HttpServletRequest httpRequest) {
-        return danmakuService.recent(ClientAddresses.resolve(httpRequest));
+    public PageResult<DanmakuVO> recent(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size,
+            HttpServletRequest httpRequest) {
+        return danmakuService.recent(page, size, ClientAddresses.resolve(httpRequest));
     }
 
     @PostMapping("/api/danmaku/{id}/like")

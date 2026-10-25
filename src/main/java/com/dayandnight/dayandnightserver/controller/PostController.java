@@ -4,6 +4,7 @@ import com.dayandnight.dayandnightserver.dto.CreatePostDTO;
 import com.dayandnight.dayandnightserver.dto.UpdatePostDTO;
 import com.dayandnight.dayandnightserver.service.PostService;
 import com.dayandnight.dayandnightserver.vo.MediaVO;
+import com.dayandnight.dayandnightserver.vo.PageResult;
 import com.dayandnight.dayandnightserver.vo.PostDetailVO;
 import com.dayandnight.dayandnightserver.vo.PostSummaryVO;
 import jakarta.validation.Valid;
@@ -18,8 +19,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/posts")
 public class PostController {
@@ -31,8 +30,11 @@ public class PostController {
     }
 
     @GetMapping
-    public List<PostSummaryVO> list() {
-        return postService.list();
+    public PageResult<PostSummaryVO> list(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "false") boolean mine) {
+        return postService.list(page, size, mine);
     }
 
     @GetMapping("/{id}")

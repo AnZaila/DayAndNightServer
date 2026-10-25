@@ -16,19 +16,30 @@
         u.avatar_url as author_avatar_url
     </sql>
 
-    <select id="findPublic" resultType="com.dayandnight.dayandnightserver.vo.PostSummaryVO">
+    <sql id="pageWhere">
+        <where>
+            <if test="publicOnly">
+                p.visibility = 'PUBLIC' and p.status = 'PUBLISHED'
+            </if>
+            <if test="authorId != null">
+                and p.author_id = #{authorId}
+            </if>
+        </where>
+    </sql>
+
+    <select id="findPage" resultType="com.dayandnight.dayandnightserver.vo.PostSummaryVO">
         select <include refid="summaryColumns"/>
         from post p
         join app_user u on u.id = p.author_id
-        where p.visibility = 'PUBLIC' and p.status = 'PUBLISHED'
+        <include refid="pageWhere"/>
         order by p.happened_at desc, p.id desc
+        limit #{limit} offset #{offset}
     </select>
 
-    <select id="findAll" resultType="com.dayandnight.dayandnightserver.vo.PostSummaryVO">
-        select <include refid="summaryColumns"/>
+    <select id="countPage" resultType="long">
+        select count(*)
         from post p
-        join app_user u on u.id = p.author_id
-        order by p.happened_at desc, p.id desc
+        <include refid="pageWhere"/>
     </select>
 
     <select id="findPlaced" resultType="com.dayandnight.dayandnightserver.vo.PlaceVO">

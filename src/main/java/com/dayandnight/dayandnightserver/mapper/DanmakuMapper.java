@@ -10,11 +10,17 @@ import java.util.List;
 @Mapper
 public interface DanmakuMapper {
 
-    List<DanmakuVO> findByPostId(@Param("postId") long postId, @Param("ipHash") String ipHash);
+    List<DanmakuVO> findVisible(
+            @Param("postId") Long postId,
+            @Param("ipHash") String ipHash,
+            @Param("limit") int limit,
+            @Param("offset") int offset);
 
-    List<DanmakuVO> findMap(@Param("ipHash") String ipHash);
+    long countVisible(@Param("postId") Long postId);
 
-    List<DanmakuVO> findRecent(@Param("ipHash") String ipHash);
+    List<DanmakuVO> findRecent(@Param("ipHash") String ipHash, @Param("limit") int limit, @Param("offset") int offset);
+
+    long countRecent();
 
     DanmakuVO findById(@Param("id") long id, @Param("ipHash") String ipHash);
 

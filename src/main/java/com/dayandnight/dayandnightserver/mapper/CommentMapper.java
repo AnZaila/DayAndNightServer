@@ -10,9 +10,29 @@ import java.util.List;
 @Mapper
 public interface CommentMapper {
 
-    List<CommentVO> findByPostId(@Param("postId") long postId, @Param("visibleOnly") boolean visibleOnly, @Param("ipHash") String ipHash);
+    List<CommentVO> findRoots(
+            @Param("postId") long postId,
+            @Param("visibleOnly") boolean visibleOnly,
+            @Param("ipHash") String ipHash,
+            @Param("limit") int limit,
+            @Param("offset") int offset);
 
-    List<CommentVO> findRecent(@Param("userId") long userId, @Param("mine") boolean mine, @Param("ipHash") String ipHash);
+    long countRoots(@Param("postId") long postId, @Param("visibleOnly") boolean visibleOnly);
+
+    List<CommentVO> findReplies(
+            @Param("postId") long postId,
+            @Param("rootIds") List<Long> rootIds,
+            @Param("visibleOnly") boolean visibleOnly,
+            @Param("ipHash") String ipHash);
+
+    List<CommentVO> findRecent(
+            @Param("userId") long userId,
+            @Param("mine") boolean mine,
+            @Param("ipHash") String ipHash,
+            @Param("limit") int limit,
+            @Param("offset") int offset);
+
+    long countRecent(@Param("userId") long userId, @Param("mine") boolean mine);
 
     CommentVO findById(@Param("id") long id, @Param("ipHash") String ipHash);
 

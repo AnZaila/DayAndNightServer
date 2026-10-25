@@ -2,6 +2,7 @@ package com.dayandnight.dayandnightserver.service.impl;
 
 import com.dayandnight.dayandnightserver.common.CurrentUser;
 import com.dayandnight.dayandnightserver.common.CurrentUsers;
+import com.dayandnight.dayandnightserver.common.Pages;
 import com.dayandnight.dayandnightserver.common.exception.BadRequestException;
 import com.dayandnight.dayandnightserver.common.exception.NotFoundException;
 import com.dayandnight.dayandnightserver.dto.CreateDanmakuDTO;
@@ -15,6 +16,7 @@ import com.dayandnight.dayandnightserver.pojo.Danmaku;
 import com.dayandnight.dayandnightserver.pojo.SiteSetting;
 import com.dayandnight.dayandnightserver.service.DanmakuService;
 import com.dayandnight.dayandnightserver.vo.DanmakuVO;
+import com.dayandnight.dayandnightserver.vo.PageResult;
 import com.dayandnight.dayandnightserver.vo.PostBodyVO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,9 +42,9 @@ public class DanmakuServiceImpl implements DanmakuService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<DanmakuVO> listForPost(long postId, String remoteAddress) {
+    public PageResult<DanmakuVO> listForPost(long postId, int page, int size, String remoteAddress) {
         requireReadable(postId);
-        return danmakuMapper.findByPostId(postId, hash(remoteAddress));
+        return visiblePage(postId, page, size, remoteAddress);
     }
 
     @Override
@@ -54,8 +56,8 @@ public class DanmakuServiceImpl implements DanmakuService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<DanmakuVO> listMap(String remoteAddress) {
-        return danmakuMapper.findMap(hash(remoteAddress));
+    public PageResult<DanmakuVO> listMap(int page, int size, String remoteAddress) {
+        return visiblePage(null, page, size, remoteAddress);
     }
 
     @Override
@@ -66,9 +68,13 @@ public class DanmakuServiceImpl implements DanmakuService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<DanmakuVO> recent(String remoteAddress) {
+    public PageResult<DanmakuVO> recent(int page, int size, String remoteAddress) {
         CurrentUsers.require();
-        return danmakuMapper.findRecent(hash(remoteAddress));
+        int safePage = Pages.page(page);
+        int safeSize = Pages.size(size, 20);
+        String ipHash = hash(remoteAddress);
+        List<DanmakuVO> items = danmakuMapper.findRecent(ipHash, safeSize, Pages.offset(safePage, safeSize));
+        return PageResult.of(items, danmakuMapper.countRecent(), safePage, safeSize);
     }
 
     @Override
@@ -111,6 +117,14 @@ public class DanmakuServiceImpl implements DanmakuService {
             throw new NotFoundException("弹幕不存在");
         }
         danmakuMapper.delete(id);
+    }
+
+    private PageResult<DanmakuVO> visiblePage(Long postId, int page, int size, String remoteAddress) {
+        int safePage = Pages.page(page);
+        int safeSize = Pages.size(size, 20);
+        String ipHash = hash(remoteAddress);
+        List<DanmakuVO> items = danmakuMapper.findVisible(postId, ipHash, safeSize, Pages.offset(safePage, safeSize));
+        return PageResult.of(items, danmakuMapper.countVisible(postId), safePage, safeSize);
     }
 
     private DanmakuVO insert(Long postId, CreateDanmakuDTO request, String remoteAddress) {

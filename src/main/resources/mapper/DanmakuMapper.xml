@@ -16,32 +16,31 @@
         (select count(*) > 0 from danmaku_like l where l.danmaku_id = d.id and l.ip_hash = #{ipHash}) as liked
     </sql>
 
-    <select id="findByPostId" resultType="com.dayandnight.dayandnightserver.vo.DanmakuVO">
-        select id, post_id, nickname, content, status, created_at, parent_id, reply_to_nickname, like_count, liked
-        from (
-            select <include refid="columns"/>
-            from danmaku d
-            left join app_user u on u.id = d.user_id
-            where d.post_id = #{postId}
-              and d.status = 'VISIBLE'
-            order by d.created_at desc, d.id desc
-            limit 80
-        ) recent
-        order by created_at asc, id asc
+    <sql id="visibleWhere">
+        where d.status = 'VISIBLE'
+        <choose>
+            <when test="postId == null">
+                and d.post_id is null
+            </when>
+            <otherwise>
+                and d.post_id = #{postId}
+            </otherwise>
+        </choose>
+    </sql>
+
+    <select id="findVisible" resultType="com.dayandnight.dayandnightserver.vo.DanmakuVO">
+        select <include refid="columns"/>
+        from danmaku d
+        left join app_user u on u.id = d.user_id
+        <include refid="visibleWhere"/>
+        order by d.created_at desc, d.id desc
+        limit #{limit} offset #{offset}
     </select>
 
-    <select id="findMap" resultType="com.dayandnight.dayandnightserver.vo.DanmakuVO">
-        select id, post_id, nickname, content, status, created_at, parent_id, reply_to_nickname, like_count, liked
-        from (
-            select <include refid="columns"/>
-            from danmaku d
-            left join app_user u on u.id = d.user_id
-            where d.post_id is null
-              and d.status = 'VISIBLE'
-            order by d.created_at desc, d.id desc
-            limit 80
-        ) recent
-        order by created_at asc, id asc
+    <select id="countVisible" resultType="long">
+        select count(*)
+        from danmaku d
+        <include refid="visibleWhere"/>
     </select>
 
     <select id="findRecent" resultType="com.dayandnight.dayandnightserver.vo.DanmakuVO">
@@ -49,7 +48,11 @@
         from danmaku d
         left join app_user u on u.id = d.user_id
         order by d.created_at desc, d.id desc
-        limit 80
+        limit #{limit} offset #{offset}
+    </select>
+
+    <select id="countRecent" resultType="long">
+        select count(*) from danmaku
     </select>
 
     <select id="findById" resultType="com.dayandnight.dayandnightserver.vo.DanmakuVO">

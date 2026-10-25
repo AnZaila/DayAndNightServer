@@ -12,9 +12,13 @@ import java.util.List;
 @Mapper
 public interface PostMapper {
 
-    List<PostSummaryVO> findPublic();
+    List<PostSummaryVO> findPage(
+            @Param("publicOnly") boolean publicOnly,
+            @Param("authorId") Long authorId,
+            @Param("limit") int limit,
+            @Param("offset") int offset);
 
-    List<PostSummaryVO> findAll();
+    long countPage(@Param("publicOnly") boolean publicOnly, @Param("authorId") Long authorId);
 
     List<PlaceVO> findPlaced(@Param("publicOnly") boolean publicOnly);
 

@@ -3,16 +3,15 @@ package com.dayandnight.dayandnightserver.service;
 import com.dayandnight.dayandnightserver.dto.CreateCommentDTO;
 import com.dayandnight.dayandnightserver.dto.UpdateCommentDTO;
 import com.dayandnight.dayandnightserver.vo.CommentVO;
-
-import java.util.List;
+import com.dayandnight.dayandnightserver.vo.PageResult;
 
 public interface CommentService {
 
-    List<CommentVO> listForPost(long postId, String remoteAddress);
+    PageResult<CommentVO> listForPost(long postId, int page, int size, String remoteAddress);
 
     CommentVO create(long postId, CreateCommentDTO request, String remoteAddress);
 
-    List<CommentVO> recent(String scope, String remoteAddress);
+    PageResult<CommentVO> recent(String scope, int page, int size, String remoteAddress);
 
     CommentVO update(long id, UpdateCommentDTO request, String remoteAddress);
 

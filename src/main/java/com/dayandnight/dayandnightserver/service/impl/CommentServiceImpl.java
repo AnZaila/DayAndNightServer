@@ -2,6 +2,7 @@ package com.dayandnight.dayandnightserver.service.impl;
 
 import com.dayandnight.dayandnightserver.common.CurrentUser;
 import com.dayandnight.dayandnightserver.common.CurrentUsers;
+import com.dayandnight.dayandnightserver.common.Pages;
 import com.dayandnight.dayandnightserver.common.exception.BadRequestException;
 import com.dayandnight.dayandnightserver.common.exception.NotFoundException;
 import com.dayandnight.dayandnightserver.dto.CreateCommentDTO;
@@ -15,6 +16,7 @@ import com.dayandnight.dayandnightserver.pojo.Comment;
 import com.dayandnight.dayandnightserver.pojo.SiteSetting;
 import com.dayandnight.dayandnightserver.service.CommentService;
 import com.dayandnight.dayandnightserver.vo.CommentVO;
+import com.dayandnight.dayandnightserver.vo.PageResult;
 import com.dayandnight.dayandnightserver.vo.PostBodyVO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Objects;
@@ -41,13 +44,24 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<CommentVO> listForPost(long postId, String remoteAddress) {
+    public PageResult<CommentVO> listForPost(long postId, int page, int size, String remoteAddress) {
         PostBodyVO post = requireReadable(postId);
         boolean visibleOnly = CurrentUsers.optional().isEmpty();
         if (!isPublic(post) && visibleOnly) {
             throw new NotFoundException("这篇不存在");
         }
-        return commentMapper.findByPostId(postId, visibleOnly, hash(remoteAddress));
+        int safePage = Pages.page(page);
+        int safeSize = Pages.size(size, 10);
+        String ipHash = hash(remoteAddress);
+        List<CommentVO> roots = commentMapper.findRoots(
+                postId, visibleOnly, ipHash, safeSize, Pages.offset(safePage, safeSize));
+        long total = commentMapper.countRoots(postId, visibleOnly);
+        List<CommentVO> items = new ArrayList<>(roots);
+        if (!roots.isEmpty()) {
+            List<Long> ids = roots.stream().map(CommentVO::id).toList();
+            items.addAll(commentMapper.findReplies(postId, ids, visibleOnly, ipHash));
+        }
+        return PageResult.of(items, total, safePage, safeSize);
     }
 
     @Override
@@ -92,16 +106,19 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<CommentVO> recent(String scope, String remoteAddress) {
+    public PageResult<CommentVO> recent(String scope, int page, int size, String remoteAddress) {
         CurrentUser user = CurrentUsers.require();
+        boolean mine = "mine".equals(scope);
+        if (!mine && !"manage".equals(scope)) {
+            throw new BadRequestException("评论范围不对");
+        }
+        int safePage = Pages.page(page);
+        int safeSize = Pages.size(size, 20);
         String ipHash = hash(remoteAddress);
-        if ("mine".equals(scope)) {
-            return commentMapper.findRecent(user.id(), true, ipHash);
-        }
-        if ("manage".equals(scope)) {
-            return commentMapper.findRecent(user.id(), false, ipHash);
-        }
-        throw new BadRequestException("评论范围不对");
+        List<CommentVO> items = commentMapper.findRecent(
+                user.id(), mine, ipHash, safeSize, Pages.offset(safePage, safeSize));
+        long total = commentMapper.countRecent(user.id(), mine);
+        return PageResult.of(items, total, safePage, safeSize);
     }
 
     @Override

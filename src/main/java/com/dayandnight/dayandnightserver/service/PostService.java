@@ -5,6 +5,7 @@ import com.dayandnight.dayandnightserver.dto.UpdatePostDTO;
 import com.dayandnight.dayandnightserver.vo.MediaVO;
 import com.dayandnight.dayandnightserver.vo.PlaceVO;
 import com.dayandnight.dayandnightserver.vo.PostDetailVO;
+import com.dayandnight.dayandnightserver.vo.PageResult;
 import com.dayandnight.dayandnightserver.vo.PostSummaryVO;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -12,7 +13,7 @@ import java.util.List;
 
 public interface PostService {
 
-    List<PostSummaryVO> list();
+    PageResult<PostSummaryVO> list(int page, int size, boolean mine);
 
     List<PlaceVO> places();
 

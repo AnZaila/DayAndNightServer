@@ -5,6 +5,7 @@ import com.dayandnight.dayandnightserver.dto.CreateCommentDTO;
 import com.dayandnight.dayandnightserver.dto.UpdateCommentDTO;
 import com.dayandnight.dayandnightserver.service.CommentService;
 import com.dayandnight.dayandnightserver.vo.CommentVO;
+import com.dayandnight.dayandnightserver.vo.PageResult;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -16,8 +17,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-
 @RestController
 public class CommentController {
 
@@ -28,8 +27,12 @@ public class CommentController {
     }
 
     @GetMapping("/api/posts/{postId}/comments")
-    public List<CommentVO> list(@PathVariable long postId, HttpServletRequest httpRequest) {
-        return commentService.listForPost(postId, ClientAddresses.resolve(httpRequest));
+    public PageResult<CommentVO> list(
+            @PathVariable long postId,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            HttpServletRequest httpRequest) {
+        return commentService.listForPost(postId, page, size, ClientAddresses.resolve(httpRequest));
     }
 
     @PostMapping("/api/posts/{postId}/comments")
@@ -41,8 +44,12 @@ public class CommentController {
     }
 
     @GetMapping("/api/comments")
-    public List<CommentVO> recent(@RequestParam(defaultValue = "manage") String scope, HttpServletRequest httpRequest) {
-        return commentService.recent(scope, ClientAddresses.resolve(httpRequest));
+    public PageResult<CommentVO> recent(
+            @RequestParam(defaultValue = "manage") String scope,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size,
+            HttpServletRequest httpRequest) {
+        return commentService.recent(scope, page, size, ClientAddresses.resolve(httpRequest));
     }
 
     @PostMapping("/api/comments/{id}/like")

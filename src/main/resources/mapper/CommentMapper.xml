@@ -17,21 +17,7 @@
         (select count(*) > 0 from comment_like l where l.comment_id = c.id and l.ip_hash = #{ipHash}) as liked
     </sql>
 
-    <select id="findByPostId" resultType="com.dayandnight.dayandnightserver.vo.CommentVO">
-        select <include refid="columns"/>
-        from comment c
-        left join app_user u on u.id = c.user_id
-        where c.post_id = #{postId}
-        <if test="visibleOnly">
-            and c.status = 'VISIBLE'
-        </if>
-        order by c.created_at asc, c.id asc
-    </select>
-
-    <select id="findRecent" resultType="com.dayandnight.dayandnightserver.vo.CommentVO">
-        select <include refid="columns"/>
-        from comment c
-        left join app_user u on u.id = c.user_id
+    <sql id="recentWhere">
         <where>
             <choose>
                 <when test="mine">
@@ -42,8 +28,59 @@
                 </otherwise>
             </choose>
         </where>
+    </sql>
+
+    <select id="findRoots" resultType="com.dayandnight.dayandnightserver.vo.CommentVO">
+        select <include refid="columns"/>
+        from comment c
+        left join app_user u on u.id = c.user_id
+        where c.post_id = #{postId}
+          and c.parent_id is null
+        <if test="visibleOnly">
+            and c.status = 'VISIBLE'
+        </if>
         order by c.created_at desc, c.id desc
-        limit 80
+        limit #{limit} offset #{offset}
+    </select>
+
+    <select id="countRoots" resultType="long">
+        select count(*)
+        from comment c
+        where c.post_id = #{postId}
+          and c.parent_id is null
+        <if test="visibleOnly">
+            and c.status = 'VISIBLE'
+        </if>
+    </select>
+
+    <select id="findReplies" resultType="com.dayandnight.dayandnightserver.vo.CommentVO">
+        select <include refid="columns"/>
+        from comment c
+        left join app_user u on u.id = c.user_id
+        where c.post_id = #{postId}
+          and c.parent_id in
+        <foreach collection="rootIds" item="rootId" open="(" separator="," close=")">
+            #{rootId}
+        </foreach>
+        <if test="visibleOnly">
+            and c.status = 'VISIBLE'
+        </if>
+        order by c.created_at asc, c.id asc
+    </select>
+
+    <select id="findRecent" resultType="com.dayandnight.dayandnightserver.vo.CommentVO">
+        select <include refid="columns"/>
+        from comment c
+        left join app_user u on u.id = c.user_id
+        <include refid="recentWhere"/>
+        order by c.created_at desc, c.id desc
+        limit #{limit} offset #{offset}
+    </select>
+
+    <select id="countRecent" resultType="long">
+        select count(*)
+        from comment c
+        <include refid="recentWhere"/>
     </select>
 
     <select id="findById" resultType="com.dayandnight.dayandnightserver.vo.CommentVO">

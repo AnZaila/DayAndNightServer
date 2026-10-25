@@ -2,6 +2,7 @@ package com.dayandnight.dayandnightserver.service.impl;
 
 import com.dayandnight.dayandnightserver.common.CurrentUser;
 import com.dayandnight.dayandnightserver.common.CurrentUsers;
+import com.dayandnight.dayandnightserver.common.Pages;
 import com.dayandnight.dayandnightserver.common.exception.BadRequestException;
 import com.dayandnight.dayandnightserver.common.exception.ForbiddenException;
 import com.dayandnight.dayandnightserver.common.exception.NotFoundException;
@@ -14,6 +15,7 @@ import com.dayandnight.dayandnightserver.pojo.Post;
 import com.dayandnight.dayandnightserver.service.MediaService;
 import com.dayandnight.dayandnightserver.service.PostService;
 import com.dayandnight.dayandnightserver.vo.MediaVO;
+import com.dayandnight.dayandnightserver.vo.PageResult;
 import com.dayandnight.dayandnightserver.vo.PlaceVO;
 import com.dayandnight.dayandnightserver.vo.PostBodyVO;
 import com.dayandnight.dayandnightserver.vo.PostDetailVO;
@@ -41,11 +43,15 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<PostSummaryVO> list() {
-        if (CurrentUsers.optional().isPresent()) {
-            return postMapper.findAll();
-        }
-        return postMapper.findPublic();
+    public PageResult<PostSummaryVO> list(int page, int size, boolean mine) {
+        int safePage = Pages.page(page);
+        int safeSize = Pages.size(size, 10);
+        boolean signedIn = CurrentUsers.optional().isPresent();
+        boolean publicOnly = !signedIn;
+        Long authorId = signedIn && mine ? CurrentUsers.require().id() : null;
+        List<PostSummaryVO> items = postMapper.findPage(publicOnly, authorId, safeSize, Pages.offset(safePage, safeSize));
+        long total = postMapper.countPage(publicOnly, authorId);
+        return PageResult.of(items, total, safePage, safeSize);
     }
 
     @Override
