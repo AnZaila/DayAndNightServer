@@ -8,13 +8,15 @@ import java.util.List;
 
 public interface CommentService {
 
-    List<CommentVO> listForPost(long postId);
+    List<CommentVO> listForPost(long postId, String remoteAddress);
 
     CommentVO create(long postId, CreateCommentDTO request, String remoteAddress);
 
-    List<CommentVO> recent();
+    List<CommentVO> recent(String scope, String remoteAddress);
 
-    CommentVO update(long id, UpdateCommentDTO request);
+    CommentVO update(long id, UpdateCommentDTO request, String remoteAddress);
+
+    CommentVO toggleLike(long id, String remoteAddress);
 
     void delete(long id);
 }

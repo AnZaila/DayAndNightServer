@@ -3,6 +3,7 @@ package com.dayandnight.dayandnightserver.service;
 import com.dayandnight.dayandnightserver.dto.CreatePostDTO;
 import com.dayandnight.dayandnightserver.dto.UpdatePostDTO;
 import com.dayandnight.dayandnightserver.vo.MediaVO;
+import com.dayandnight.dayandnightserver.vo.PlaceVO;
 import com.dayandnight.dayandnightserver.vo.PostDetailVO;
 import com.dayandnight.dayandnightserver.vo.PostSummaryVO;
 import org.springframework.web.multipart.MultipartFile;
@@ -13,6 +14,8 @@ public interface PostService {
 
     List<PostSummaryVO> list();
 
+    List<PlaceVO> places();
+
     PostDetailVO get(long id);
 
     PostDetailVO create(CreatePostDTO request);
@@ -21,7 +24,7 @@ public interface PostService {
 
     void delete(long id);
 
-    List<MediaVO> addMedia(long id, List<MultipartFile> files);
+    MediaVO addCover(long id, MultipartFile file);
 
     void deleteMedia(long id, long mediaId);
 }

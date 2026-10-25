@@ -15,5 +15,10 @@ public interface UserMapper {
 
     User findById(long id);
 
-    int updateProfile(@Param("id") long id, @Param("displayName") String displayName, @Param("avatarUrl") String avatarUrl);
+    int updateProfile(
+            @Param("id") long id,
+            @Param("displayName") String displayName,
+            @Param("signature") String signature,
+            @Param("avatarUrl") String avatarUrl,
+            @Param("coverUrl") String coverUrl);
 }

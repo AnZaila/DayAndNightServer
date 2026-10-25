@@ -59,4 +59,12 @@ public class AuthController {
             HttpServletResponse httpResponse) {
         return authService.updateAvatar(file, httpRequest, httpResponse);
     }
+
+    @PostMapping("/cover")
+    public CurrentUserVO cover(
+            @RequestParam("file") MultipartFile file,
+            HttpServletRequest httpRequest,
+            HttpServletResponse httpResponse) {
+        return authService.updateCover(file, httpRequest, httpResponse);
+    }
 }

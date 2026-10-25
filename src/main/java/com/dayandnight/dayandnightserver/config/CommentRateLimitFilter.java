@@ -1,5 +1,6 @@
 package com.dayandnight.dayandnightserver.config;
 
+import com.dayandnight.dayandnightserver.common.ClientAddresses;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,7 +27,7 @@ public class CommentRateLimitFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         String uri = request.getRequestURI();
         boolean commentPost = "POST".equals(request.getMethod()) && uri.matches(".*/api/posts/\\d+/comments");
-        if (commentPost && !allow(hash(request.getRemoteAddr()))) {
+        if (commentPost && !allow(hash(ClientAddresses.resolve(request)))) {
             response.setStatus(429);
             response.setCharacterEncoding("UTF-8");
             response.setContentType("application/problem+json");

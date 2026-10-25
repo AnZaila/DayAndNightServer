@@ -39,6 +39,8 @@ import java.util.UUID;
 public class AuthServiceImpl implements AuthService {
 
     private static final int AVATAR_EDGE = 512;
+    private static final int COVER_WIDTH = 1600;
+    private static final int COVER_HEIGHT = 700;
     private static final Set<String> ALLOWED = Set.of("image/jpeg", "image/jpg", "image/png", "image/webp");
 
     private final AuthenticationManager authenticationManager;
@@ -69,7 +71,11 @@ public class AuthServiceImpl implements AuthService {
             new ChangeSessionIdAuthenticationStrategy().onAuthentication(authentication, httpRequest, httpResponse);
             securityContextRepository.saveContext(context, httpRequest, httpResponse);
             OwnerUser owner = (OwnerUser) authentication.getPrincipal();
-            return new CurrentUserVO(owner.getId(), owner.getUsername(), owner.getDisplayName(), owner.getAvatarUrl());
+            User user = userMapper.findById(owner.getId());
+            if (user == null) {
+                throw new UnauthorizedException("请先登录");
+            }
+            return toVo(user);
         } catch (AuthenticationException exception) {
             throw new UnauthorizedException("邮箱或密码不正确");
         }
@@ -93,7 +99,8 @@ public class AuthServiceImpl implements AuthService {
             UpdateProfileDTO request, HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
         User user = stored();
         user.setDisplayName(request.displayName().trim());
-        userMapper.updateProfile(user.getId(), user.getDisplayName(), user.getAvatarUrl());
+        user.setSignature(blankToNull(request.signature()));
+        save(user);
         remember(user, httpRequest, httpResponse);
         return toVo(user);
     }
@@ -102,10 +109,25 @@ public class AuthServiceImpl implements AuthService {
     public CurrentUserVO updateAvatar(
             MultipartFile file, HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
         User user = stored();
-        String next = storeAvatar(file);
+        String next = storeImage(file, AVATAR_EDGE, AVATAR_EDGE);
         String previous = user.getAvatarUrl();
         user.setAvatarUrl(next);
-        userMapper.updateProfile(user.getId(), user.getDisplayName(), next);
+        save(user);
+        if (previous != null && !previous.equals(next)) {
+            deleteUpload(previous);
+        }
+        remember(user, httpRequest, httpResponse);
+        return toVo(user);
+    }
+
+    @Override
+    public CurrentUserVO updateCover(
+            MultipartFile file, HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
+        User user = stored();
+        String next = storeImage(file, COVER_WIDTH, COVER_HEIGHT);
+        String previous = user.getCoverUrl();
+        user.setCoverUrl(next);
+        save(user);
         if (previous != null && !previous.equals(next)) {
             deleteUpload(previous);
         }
@@ -132,11 +154,29 @@ public class AuthServiceImpl implements AuthService {
         securityContextRepository.saveContext(context, httpRequest, httpResponse);
     }
 
-    private CurrentUserVO toVo(User user) {
-        return new CurrentUserVO(user.getId(), user.getEmail(), user.getDisplayName(), user.getAvatarUrl());
+    private void save(User user) {
+        userMapper.updateProfile(
+                user.getId(), user.getDisplayName(), user.getSignature(), user.getAvatarUrl(), user.getCoverUrl());
     }
 
-    private String storeAvatar(MultipartFile file) {
+    private CurrentUserVO toVo(User user) {
+        return new CurrentUserVO(
+                user.getId(),
+                user.getEmail(),
+                user.getDisplayName(),
+                user.getAvatarUrl(),
+                user.getCoverUrl(),
+                user.getSignature());
+    }
+
+    private static String blankToNull(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value.trim();
+    }
+
+    private String storeImage(MultipartFile file, int width, int height) {
         if (file == null || file.isEmpty()) {
             throw new BadRequestException("请选择图片");
         }
@@ -153,7 +193,7 @@ public class AuthServiceImpl implements AuthService {
             Path directory = uploadDirectory();
             Files.createDirectories(directory);
             Thumbnails.of(source)
-                    .size(AVATAR_EDGE, AVATAR_EDGE)
+                    .size(width, height)
                     .outputFormat("jpg")
                     .outputQuality(0.9)
                     .toFile(directory.resolve(filename).toFile());

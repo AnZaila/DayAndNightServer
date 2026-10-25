@@ -51,7 +51,15 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/posts", "/api/posts/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/posts/*/comments").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/posts/*/comments").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/comments/*/like").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/anniversaries").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/maps/static").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/places").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/posts/*/danmaku").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/posts/*/danmaku").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/danmaku/map").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/danmaku").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/danmaku/*/like").permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint((request, response, exception) ->
@@ -80,6 +88,12 @@ public class SecurityConfig {
     private CorsConfigurationSource corsConfigurationSource(DayAndNightProperties properties) {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(properties.webOrigin()));
+        configuration.setAllowedOriginPatterns(List.of(
+                "http://localhost:*",
+                "http://127.0.0.1:*",
+                "http://10.*.*.*:*",
+                "http://192.168.*.*:*",
+                "http://172.*.*.*:*"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);

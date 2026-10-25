@@ -24,6 +24,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class CommentServiceImpl implements CommentService {
@@ -40,13 +41,13 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<CommentVO> listForPost(long postId) {
+    public List<CommentVO> listForPost(long postId, String remoteAddress) {
         PostBodyVO post = requireReadable(postId);
         boolean visibleOnly = CurrentUsers.optional().isEmpty();
         if (!isPublic(post) && visibleOnly) {
             throw new NotFoundException("这篇不存在");
         }
-        return commentMapper.findByPostId(postId, visibleOnly);
+        return commentMapper.findByPostId(postId, visibleOnly, hash(remoteAddress));
     }
 
     @Override
@@ -62,45 +63,101 @@ public class CommentServiceImpl implements CommentService {
         if (!Boolean.TRUE.equals(post.commentsOpen())) {
             throw new BadRequestException("这篇暂时不接收评论");
         }
+        String ipHash = hash(remoteAddress);
+        CurrentUser author = CurrentUsers.optional().orElse(null);
+        ReplyTarget reply = resolveReply(postId, request.parentId(), ipHash, author);
+        if (author == null) {
+            int existing = commentMapper.countVisitor(postId, ipHash, reply.parentId());
+            if (existing > 0) {
+                throw new BadRequestException(reply.parentId() == null
+                        ? "这个地址在这篇下面只能留一条评论"
+                        : "这个地址在这条下面已经回复过一次");
+            }
+        }
         SiteSetting site = siteSettingMapper.find();
         Comment comment = new Comment();
         comment.setPostId(postId);
-        comment.setNickname(nicknameFor(request));
+        comment.setParentId(reply.parentId());
+        comment.setReplyToNickname(reply.replyToNickname());
+        comment.setUserId(author == null ? null : author.id());
+        comment.setNickname(nicknameFor(request, author));
         comment.setContent(request.content().trim());
         comment.setStatus(site != null && CommentMode.REVIEW.name().equals(site.getCommentMode())
                 ? "HIDDEN"
                 : "VISIBLE");
-        comment.setIpHash(hash(remoteAddress));
+        comment.setIpHash(ipHash);
         commentMapper.insert(comment);
-        return commentMapper.findById(comment.getId());
+        return commentMapper.findById(comment.getId(), ipHash);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<CommentVO> recent() {
-        CurrentUsers.require();
-        return commentMapper.findRecent();
+    public List<CommentVO> recent(String scope, String remoteAddress) {
+        CurrentUser user = CurrentUsers.require();
+        String ipHash = hash(remoteAddress);
+        if ("mine".equals(scope)) {
+            return commentMapper.findRecent(user.id(), true, ipHash);
+        }
+        if ("manage".equals(scope)) {
+            return commentMapper.findRecent(user.id(), false, ipHash);
+        }
+        throw new BadRequestException("评论范围不对");
     }
 
     @Override
     @Transactional
-    public CommentVO update(long id, UpdateCommentDTO request) {
+    public CommentVO update(long id, UpdateCommentDTO request, String remoteAddress) {
         CurrentUsers.require();
-        if (commentMapper.findById(id) == null) {
+        String ipHash = hash(remoteAddress);
+        if (commentMapper.findById(id, ipHash) == null) {
             throw new NotFoundException("评论不存在");
         }
         commentMapper.updateStatus(id, request.status().name());
-        return commentMapper.findById(id);
+        return commentMapper.findById(id, ipHash);
+    }
+
+    @Override
+    @Transactional
+    public CommentVO toggleLike(long id, String remoteAddress) {
+        String ipHash = hash(remoteAddress);
+        CommentVO existing = commentMapper.findById(id, ipHash);
+        if (existing == null) {
+            throw new NotFoundException("评论不存在");
+        }
+        requireReadable(existing.postId());
+        CurrentUser author = CurrentUsers.optional().orElse(null);
+        if (commentMapper.countLike(id, ipHash) > 0) {
+            commentMapper.deleteLike(id, ipHash);
+        } else {
+            commentMapper.insertLike(id, ipHash, author == null ? null : author.id());
+        }
+        return commentMapper.findById(id, ipHash);
     }
 
     @Override
     @Transactional
     public void delete(long id) {
         CurrentUsers.require();
-        if (commentMapper.findById(id) == null) {
+        if (commentMapper.findById(id, "") == null) {
             throw new NotFoundException("评论不存在");
         }
         commentMapper.delete(id);
+    }
+
+    private ReplyTarget resolveReply(long postId, Long targetId, String ipHash, CurrentUser author) {
+        if (targetId == null) {
+            return new ReplyTarget(null, null);
+        }
+        CommentVO target = commentMapper.findById(targetId, ipHash);
+        if (target == null || !Objects.equals(target.postId(), postId)) {
+            throw new BadRequestException("要回复的评论不存在");
+        }
+        if ("HIDDEN".equals(target.status()) && author == null) {
+            throw new BadRequestException("要回复的评论不存在");
+        }
+        Long rootId = target.parentId() == null ? target.id() : target.parentId();
+        String replyToNickname = target.parentId() == null ? null : target.nickname();
+        return new ReplyTarget(rootId, replyToNickname);
     }
 
     private PostBodyVO requireReadable(long postId) {
@@ -118,8 +175,7 @@ public class CommentServiceImpl implements CommentService {
         return "PUBLIC".equals(post.visibility()) && PostStatus.PUBLISHED.name().equals(post.status());
     }
 
-    private String nicknameFor(CreateCommentDTO request) {
-        CurrentUser user = CurrentUsers.optional().orElse(null);
+    private String nicknameFor(CreateCommentDTO request, CurrentUser user) {
         if (user != null) {
             String name = user.displayName();
             return name.length() > 20 ? name.substring(0, 20) : name;
@@ -138,5 +194,8 @@ public class CommentServiceImpl implements CommentService {
         } catch (NoSuchAlgorithmException exception) {
             throw new IllegalStateException(exception);
         }
+    }
+
+    private record ReplyTarget(Long parentId, String replyToNickname) {
     }
 }

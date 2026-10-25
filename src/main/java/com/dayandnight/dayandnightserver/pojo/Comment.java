@@ -4,10 +4,13 @@ public class Comment {
 
     private Long id;
     private Long postId;
+    private Long parentId;
+    private String replyToNickname;
     private String nickname;
     private String content;
     private String status;
     private String ipHash;
+    private Long userId;
 
     public Long getId() {
         return id;
@@ -23,6 +26,22 @@ public class Comment {
 
     public void setPostId(Long postId) {
         this.postId = postId;
+    }
+
+    public Long getParentId() {
+        return parentId;
+    }
+
+    public void setParentId(Long parentId) {
+        this.parentId = parentId;
+    }
+
+    public String getReplyToNickname() {
+        return replyToNickname;
+    }
+
+    public void setReplyToNickname(String replyToNickname) {
+        this.replyToNickname = replyToNickname;
     }
 
     public String getNickname() {
@@ -55,5 +74,13 @@ public class Comment {
 
     public void setIpHash(String ipHash) {
         this.ipHash = ipHash;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 }

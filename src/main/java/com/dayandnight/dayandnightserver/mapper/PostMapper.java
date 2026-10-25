@@ -1,9 +1,11 @@
 package com.dayandnight.dayandnightserver.mapper;
 
 import com.dayandnight.dayandnightserver.pojo.Post;
+import com.dayandnight.dayandnightserver.vo.PlaceVO;
 import com.dayandnight.dayandnightserver.vo.PostBodyVO;
 import com.dayandnight.dayandnightserver.vo.PostSummaryVO;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -13,6 +15,8 @@ public interface PostMapper {
     List<PostSummaryVO> findPublic();
 
     List<PostSummaryVO> findAll();
+
+    List<PlaceVO> findPlaced(@Param("publicOnly") boolean publicOnly);
 
     PostBodyVO findById(long id);
 

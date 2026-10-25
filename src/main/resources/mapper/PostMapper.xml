@@ -9,9 +9,11 @@
         p.happened_at,
         left(p.content, 140) as excerpt,
         p.mood,
+        p.weather,
         p.visibility,
         u.display_name,
-        (select m.url from post_media m where m.post_id = p.id order by m.sort_order, m.id limit 1) as cover_url
+        (select m.url from post_media m where m.post_id = p.id order by m.sort_order, m.id limit 1) as cover_url,
+        u.avatar_url as author_avatar_url
     </sql>
 
     <select id="findPublic" resultType="com.dayandnight.dayandnightserver.vo.PostSummaryVO">
@@ -29,6 +31,25 @@
         order by p.happened_at desc, p.id desc
     </select>
 
+    <select id="findPlaced" resultType="com.dayandnight.dayandnightserver.vo.PlaceVO">
+        select p.id,
+               p.happened_at,
+               p.location,
+               u.display_name,
+               (select m.url from post_media m where m.post_id = p.id order by m.sort_order, m.id limit 1) as cover_url,
+               p.latitude,
+               p.longitude
+        from post p
+        join app_user u on u.id = p.author_id
+        where p.latitude is not null
+          and p.longitude is not null
+        <if test="publicOnly">
+            and p.visibility = 'PUBLIC'
+            and p.status = 'PUBLISHED'
+        </if>
+        order by p.happened_at desc, p.id desc
+    </select>
+
     <select id="findById" resultType="com.dayandnight.dayandnightserver.vo.PostBodyVO">
         select p.id,
                p.author_id,
@@ -36,18 +57,23 @@
                p.content,
                p.happened_at,
                p.mood,
+               p.weather,
                p.location,
                p.visibility,
                p.status,
-               p.comments_open
+               p.comments_open,
+               u.avatar_url as author_avatar_url,
+               p.latitude,
+               p.longitude
         from post p
         join app_user u on u.id = p.author_id
         where p.id = #{id}
     </select>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        insert into post (author_id, content, happened_at, mood, location, visibility, status, comments_open)
-        values (#{authorId}, #{content}, #{happenedAt}, #{mood}, #{location}, #{visibility}, #{status}, #{commentsOpen})
+        insert into post (author_id, content, happened_at, mood, weather, location, visibility, status, comments_open, latitude, longitude)
+        values (#{authorId}, #{content}, #{happenedAt}, #{mood}, #{weather}, #{location}, #{visibility}, #{status}, #{commentsOpen},
+                #{latitude,jdbcType=DECIMAL}, #{longitude,jdbcType=DECIMAL})
     </insert>
 
     <update id="update">
@@ -55,10 +81,13 @@
         set content = #{content},
             happened_at = #{happenedAt},
             mood = #{mood},
+            weather = #{weather},
             location = #{location},
             visibility = #{visibility},
             status = #{status},
-            comments_open = #{commentsOpen}
+            comments_open = #{commentsOpen},
+            latitude = #{latitude,jdbcType=DECIMAL},
+            longitude = #{longitude,jdbcType=DECIMAL}
         where id = #{id}
     </update>
 

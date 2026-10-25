@@ -10,7 +10,8 @@ public record DayAndNightProperties(
         String uploadDir,
         LocalDate togetherSince,
         Owner ownerA,
-        Owner ownerB
+        Owner ownerB,
+        String amapKey
 ) {
     public record Owner(String email, String password, String name) {
     }

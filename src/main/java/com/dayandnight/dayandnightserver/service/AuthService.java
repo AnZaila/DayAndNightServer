@@ -18,4 +18,6 @@ public interface AuthService {
     CurrentUserVO updateProfile(UpdateProfileDTO request, HttpServletRequest httpRequest, HttpServletResponse httpResponse);
 
     CurrentUserVO updateAvatar(MultipartFile file, HttpServletRequest httpRequest, HttpServletResponse httpResponse);
+
+    CurrentUserVO updateCover(MultipartFile file, HttpServletRequest httpRequest, HttpServletResponse httpResponse);
 }

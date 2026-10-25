@@ -56,8 +56,8 @@ public class PostController {
     }
 
     @PostMapping("/{id}/media")
-    public List<MediaVO> addMedia(@PathVariable long id, @RequestParam("files") List<MultipartFile> files) {
-        return postService.addMedia(id, files);
+    public MediaVO addCover(@PathVariable long id, @RequestParam("file") MultipartFile file) {
+        return postService.addCover(id, file);
     }
 
     @DeleteMapping("/{id}/media/{mediaId}")

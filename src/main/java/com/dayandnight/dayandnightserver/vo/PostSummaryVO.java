@@ -8,8 +8,10 @@ public record PostSummaryVO(
         LocalDate happenedAt,
         String excerpt,
         String mood,
+        String weather,
         String visibility,
         String displayName,
-        String coverUrl
+        String coverUrl,
+        String authorAvatarUrl
 ) {
 }

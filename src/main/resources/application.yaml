@@ -45,3 +45,4 @@ dayandnight:
     email: ${OWNER_B_EMAIL}
     password: ${OWNER_B_PASSWORD}
     name: ${OWNER_B_NAME:暮}
+  amap-key: ${AMAP_KEY:}

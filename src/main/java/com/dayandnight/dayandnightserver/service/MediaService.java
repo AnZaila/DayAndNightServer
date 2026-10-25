@@ -1,13 +1,14 @@
 package com.dayandnight.dayandnightserver.service;
 
+import com.dayandnight.dayandnightserver.vo.ImageVO;
 import com.dayandnight.dayandnightserver.vo.MediaVO;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-
 public interface MediaService {
 
-    List<MediaVO> store(long postId, List<MultipartFile> files);
+    MediaVO storeCover(long postId, MultipartFile file);
+
+    ImageVO storeContent(MultipartFile file);
 
     void delete(long postId, long mediaId);
 

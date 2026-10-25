@@ -3,6 +3,7 @@ package com.dayandnight.dayandnightserver.pojo;
 import com.dayandnight.dayandnightserver.dto.CreatePostDTO;
 import com.dayandnight.dayandnightserver.enums.PostStatus;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public class Post {
@@ -12,10 +13,13 @@ public class Post {
     private String content;
     private LocalDate happenedAt;
     private String mood;
+    private String weather;
     private String location;
     private String visibility;
     private String status;
     private Boolean commentsOpen;
+    private BigDecimal latitude;
+    private BigDecimal longitude;
 
     public static Post forInsert(long authorId, CreatePostDTO request) {
         Post post = new Post();
@@ -23,6 +27,7 @@ public class Post {
         post.content = request.content().trim();
         post.happenedAt = request.happenedAt();
         post.mood = blankToNull(request.mood());
+        post.weather = blankToNull(request.weather());
         post.location = blankToNull(request.location());
         post.visibility = request.visibility().name();
         post.status = PostStatus.PUBLISHED.name();
@@ -77,6 +82,14 @@ public class Post {
         this.mood = mood;
     }
 
+    public String getWeather() {
+        return weather;
+    }
+
+    public void setWeather(String weather) {
+        this.weather = weather;
+    }
+
     public String getLocation() {
         return location;
     }
@@ -107,5 +120,21 @@ public class Post {
 
     public void setCommentsOpen(Boolean commentsOpen) {
         this.commentsOpen = commentsOpen;
+    }
+
+    public BigDecimal getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(BigDecimal latitude) {
+        this.latitude = latitude;
+    }
+
+    public BigDecimal getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(BigDecimal longitude) {
+        this.longitude = longitude;
     }
 }

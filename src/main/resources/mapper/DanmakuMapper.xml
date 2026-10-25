@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dayandnight.dayandnightserver.mapper.DanmakuMapper">
+
+    <sql id="columns">
+        d.id,
+        d.post_id,
+        d.nickname,
+        d.content,
+        d.status,
+        d.created_at,
+        d.parent_id,
+        d.reply_to_nickname,
+        (select count(*) from danmaku_like l where l.danmaku_id = d.id) as like_count,
+        (select count(*) > 0 from danmaku_like l where l.danmaku_id = d.id and l.ip_hash = #{ipHash}) as liked
+    </sql>
+
+    <select id="findByPostId" resultType="com.dayandnight.dayandnightserver.vo.DanmakuVO">
+        select id, post_id, nickname, content, status, created_at, parent_id, reply_to_nickname, like_count, liked
+        from (
+            select <include refid="columns"/>
+            from danmaku d
+            where d.post_id = #{postId}
+              and d.status = 'VISIBLE'
+            order by d.created_at desc, d.id desc
+            limit 80
+        ) recent
+        order by created_at asc, id asc
+    </select>
+
+    <select id="findMap" resultType="com.dayandnight.dayandnightserver.vo.DanmakuVO">
+        select id, post_id, nickname, content, status, created_at, parent_id, reply_to_nickname, like_count, liked
+        from (
+            select <include refid="columns"/>
+            from danmaku d
+            where d.post_id is null
+              and d.status = 'VISIBLE'
+            order by d.created_at desc, d.id desc
+            limit 80
+        ) recent
+        order by created_at asc, id asc
+    </select>
+
+    <select id="findRecent" resultType="com.dayandnight.dayandnightserver.vo.DanmakuVO">
+        select <include refid="columns"/>
+        from danmaku d
+        order by d.created_at desc, d.id desc
+        limit 80
+    </select>
+
+    <select id="findById" resultType="com.dayandnight.dayandnightserver.vo.DanmakuVO">
+        select <include refid="columns"/>
+        from danmaku d
+        where d.id = #{id}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into danmaku (post_id, parent_id, reply_to_nickname, user_id, nickname, content, status, ip_hash)
+        values (#{postId,jdbcType=BIGINT}, #{parentId,jdbcType=BIGINT}, #{replyToNickname}, #{userId,jdbcType=BIGINT},
+                #{nickname}, #{content}, #{status}, #{ipHash})
+    </insert>
+
+    <update id="updateStatus">
+        update danmaku set status = #{status} where id = #{id}
+    </update>
+
+    <delete id="delete">
+        delete from danmaku where id = #{id}
+    </delete>
+
+    <select id="countLike" resultType="int">
+        select count(*) from danmaku_like where danmaku_id = #{danmakuId} and ip_hash = #{ipHash}
+    </select>
+
+    <insert id="insertLike">
+        insert into danmaku_like (danmaku_id, ip_hash, user_id)
+        values (#{danmakuId}, #{ipHash}, #{userId,jdbcType=BIGINT})
+    </insert>
+
+    <delete id="deleteLike">
+        delete from danmaku_like where danmaku_id = #{danmakuId} and ip_hash = #{ipHash}
+    </delete>
+</mapper>

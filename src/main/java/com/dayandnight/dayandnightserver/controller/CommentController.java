@@ -1,5 +1,6 @@
 package com.dayandnight.dayandnightserver.controller;
 
+import com.dayandnight.dayandnightserver.common.ClientAddresses;
 import com.dayandnight.dayandnightserver.dto.CreateCommentDTO;
 import com.dayandnight.dayandnightserver.dto.UpdateCommentDTO;
 import com.dayandnight.dayandnightserver.service.CommentService;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -26,8 +28,8 @@ public class CommentController {
     }
 
     @GetMapping("/api/posts/{postId}/comments")
-    public List<CommentVO> list(@PathVariable long postId) {
-        return commentService.listForPost(postId);
+    public List<CommentVO> list(@PathVariable long postId, HttpServletRequest httpRequest) {
+        return commentService.listForPost(postId, ClientAddresses.resolve(httpRequest));
     }
 
     @PostMapping("/api/posts/{postId}/comments")
@@ -35,17 +37,22 @@ public class CommentController {
             @PathVariable long postId,
             @Valid @RequestBody CreateCommentDTO request,
             HttpServletRequest httpRequest) {
-        return commentService.create(postId, request, httpRequest.getRemoteAddr());
+        return commentService.create(postId, request, ClientAddresses.resolve(httpRequest));
     }
 
     @GetMapping("/api/comments")
-    public List<CommentVO> recent() {
-        return commentService.recent();
+    public List<CommentVO> recent(@RequestParam(defaultValue = "manage") String scope, HttpServletRequest httpRequest) {
+        return commentService.recent(scope, ClientAddresses.resolve(httpRequest));
+    }
+
+    @PostMapping("/api/comments/{id}/like")
+    public CommentVO like(@PathVariable long id, HttpServletRequest httpRequest) {
+        return commentService.toggleLike(id, ClientAddresses.resolve(httpRequest));
     }
 
     @PatchMapping("/api/comments/{id}")
-    public CommentVO update(@PathVariable long id, @Valid @RequestBody UpdateCommentDTO request) {
-        return commentService.update(id, request);
+    public CommentVO update(@PathVariable long id, @Valid @RequestBody UpdateCommentDTO request, HttpServletRequest httpRequest) {
+        return commentService.update(id, request, ClientAddresses.resolve(httpRequest));
     }
 
     @DeleteMapping("/api/comments/{id}")

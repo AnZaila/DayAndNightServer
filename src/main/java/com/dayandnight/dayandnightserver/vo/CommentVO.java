@@ -8,6 +8,11 @@ public record CommentVO(
         String nickname,
         String content,
         String status,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        String avatarUrl,
+        Long parentId,
+        String replyToNickname,
+        Integer likeCount,
+        Boolean liked
 ) {
 }

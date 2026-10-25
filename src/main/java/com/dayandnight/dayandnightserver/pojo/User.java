@@ -7,6 +7,8 @@ public class User {
     private String passwordHash;
     private String displayName;
     private String avatarUrl;
+    private String coverUrl;
+    private String signature;
     private String role;
 
     public Long getId() {
@@ -47,6 +49,22 @@ public class User {
 
     public void setAvatarUrl(String avatarUrl) {
         this.avatarUrl = avatarUrl;
+    }
+
+    public String getCoverUrl() {
+        return coverUrl;
+    }
+
+    public void setCoverUrl(String coverUrl) {
+        this.coverUrl = coverUrl;
+    }
+
+    public String getSignature() {
+        return signature;
+    }
+
+    public void setSignature(String signature) {
+        this.signature = signature;
     }
 
     public String getRole() {

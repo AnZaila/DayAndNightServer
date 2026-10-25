@@ -13,13 +13,13 @@
     </insert>
 
     <select id="findByEmail" resultType="com.dayandnight.dayandnightserver.pojo.User">
-        select id, email, password_hash, display_name, avatar_url, role
+        select id, email, password_hash, display_name, avatar_url, cover_url, signature, role
         from app_user
         where email = #{email}
     </select>
 
     <select id="findById" resultType="com.dayandnight.dayandnightserver.pojo.User">
-        select id, email, password_hash, display_name, avatar_url, role
+        select id, email, password_hash, display_name, avatar_url, cover_url, signature, role
         from app_user
         where id = #{id}
     </select>
@@ -27,7 +27,9 @@
     <update id="updateProfile">
         update app_user
         set display_name = #{displayName},
-            avatar_url = #{avatarUrl}
+            signature = #{signature,jdbcType=VARCHAR},
+            avatar_url = #{avatarUrl,jdbcType=VARCHAR},
+            cover_url = #{coverUrl,jdbcType=VARCHAR}
         where id = #{id}
     </update>
 </mapper>
