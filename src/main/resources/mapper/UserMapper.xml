@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dayandnight.dayandnightserver.mapper.UserMapper">
+
+    <select id="count" resultType="int">
+        select count(*) from app_user
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into app_user (email, password_hash, display_name, role)
+        values (#{email}, #{passwordHash}, #{displayName}, #{role})
+    </insert>
+
+    <select id="findByEmail" resultType="com.dayandnight.dayandnightserver.pojo.User">
+        select id, email, password_hash, display_name, avatar_url, role
+        from app_user
+        where email = #{email}
+    </select>
+
+    <select id="findById" resultType="com.dayandnight.dayandnightserver.pojo.User">
+        select id, email, password_hash, display_name, avatar_url, role
+        from app_user
+        where id = #{id}
+    </select>
+
+    <update id="updateProfile">
+        update app_user
+        set display_name = #{displayName},
+            avatar_url = #{avatarUrl}
+        where id = #{id}
+    </update>
+</mapper>

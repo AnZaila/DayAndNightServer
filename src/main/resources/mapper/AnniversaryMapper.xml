@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dayandnight.dayandnightserver.mapper.AnniversaryMapper">
+
+    <select id="findPublic" resultType="com.dayandnight.dayandnightserver.vo.AnniversaryVO">
+        select id, title, date, repeat_yearly, note, visibility
+        from anniversary
+        where visibility = 'PUBLIC'
+        order by date, id
+    </select>
+
+    <select id="findAll" resultType="com.dayandnight.dayandnightserver.vo.AnniversaryVO">
+        select id, title, date, repeat_yearly, note, visibility
+        from anniversary
+        order by date, id
+    </select>
+
+    <select id="findById" resultType="com.dayandnight.dayandnightserver.vo.AnniversaryVO">
+        select id, title, date, repeat_yearly, note, visibility
+        from anniversary
+        where id = #{id}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into anniversary (title, date, repeat_yearly, note, visibility)
+        values (#{title}, #{date}, #{repeatYearly}, #{note}, #{visibility})
+    </insert>
+
+    <update id="update">
+        update anniversary
+        set title = #{title},
+            date = #{date},
+            repeat_yearly = #{repeatYearly},
+            note = #{note},
+            visibility = #{visibility}
+        where id = #{id}
+    </update>
+
+    <delete id="delete">
+        delete from anniversary where id = #{id}
+    </delete>
+</mapper>

@@ -1,0 +1,47 @@
+spring:
+  application:
+    name: DayAndNight-server
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  servlet:
+    multipart:
+      max-file-size: 8MB
+      max-request-size: 40MB
+  session:
+    timeout: 14d
+    jdbc:
+      initialize-schema: always
+  mvc:
+    problemdetails:
+      enabled: true
+
+server:
+  port: ${SERVER_PORT:1004}
+  servlet:
+    session:
+      timeout: 14d
+      cookie:
+        http-only: true
+        same-site: lax
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+
+dayandnight:
+  web-origin: ${WEB_ORIGIN:http://localhost:602}
+  upload-dir: ${UPLOAD_DIR:./uploads}
+  together-since: ${TOGETHER_SINCE:2024-01-01}
+  owner-a:
+    email: ${OWNER_A_EMAIL}
+    password: ${OWNER_A_PASSWORD}
+    name: ${OWNER_A_NAME:朝}
+  owner-b:
+    email: ${OWNER_B_EMAIL}
+    password: ${OWNER_B_PASSWORD}
+    name: ${OWNER_B_NAME:暮}

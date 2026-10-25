@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dayandnight.dayandnightserver.mapper.PostMapper">
+
+    <sql id="summaryColumns">
+        p.id,
+        p.author_id,
+        p.happened_at,
+        left(p.content, 140) as excerpt,
+        p.mood,
+        p.visibility,
+        u.display_name,
+        (select m.url from post_media m where m.post_id = p.id order by m.sort_order, m.id limit 1) as cover_url
+    </sql>
+
+    <select id="findPublic" resultType="com.dayandnight.dayandnightserver.vo.PostSummaryVO">
+        select <include refid="summaryColumns"/>
+        from post p
+        join app_user u on u.id = p.author_id
+        where p.visibility = 'PUBLIC' and p.status = 'PUBLISHED'
+        order by p.happened_at desc, p.id desc
+    </select>
+
+    <select id="findAll" resultType="com.dayandnight.dayandnightserver.vo.PostSummaryVO">
+        select <include refid="summaryColumns"/>
+        from post p
+        join app_user u on u.id = p.author_id
+        order by p.happened_at desc, p.id desc
+    </select>
+
+    <select id="findById" resultType="com.dayandnight.dayandnightserver.vo.PostBodyVO">
+        select p.id,
+               p.author_id,
+               u.display_name,
+               p.content,
+               p.happened_at,
+               p.mood,
+               p.location,
+               p.visibility,
+               p.status,
+               p.comments_open
+        from post p
+        join app_user u on u.id = p.author_id
+        where p.id = #{id}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into post (author_id, content, happened_at, mood, location, visibility, status, comments_open)
+        values (#{authorId}, #{content}, #{happenedAt}, #{mood}, #{location}, #{visibility}, #{status}, #{commentsOpen})
+    </insert>
+
+    <update id="update">
+        update post
+        set content = #{content},
+            happened_at = #{happenedAt},
+            mood = #{mood},
+            location = #{location},
+            visibility = #{visibility},
+            status = #{status},
+            comments_open = #{commentsOpen}
+        where id = #{id}
+    </update>
+
+    <delete id="delete">
+        delete from post where id = #{id}
+    </delete>
+</mapper>
