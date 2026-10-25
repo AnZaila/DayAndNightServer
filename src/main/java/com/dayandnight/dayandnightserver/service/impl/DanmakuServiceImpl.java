@@ -24,7 +24,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 import java.util.List;
-import java.util.Objects;
 
 @Service
 public class DanmakuServiceImpl implements DanmakuService {
@@ -117,12 +116,9 @@ public class DanmakuServiceImpl implements DanmakuService {
     private DanmakuVO insert(Long postId, CreateDanmakuDTO request, String remoteAddress) {
         String ipHash = hash(remoteAddress);
         CurrentUser author = CurrentUsers.optional().orElse(null);
-        ReplyTarget reply = resolveReply(postId, request.parentId(), ipHash, author);
         SiteSetting site = siteSettingMapper.find();
         Danmaku danmaku = new Danmaku();
         danmaku.setPostId(postId);
-        danmaku.setParentId(reply.parentId());
-        danmaku.setReplyToNickname(reply.replyToNickname());
         danmaku.setUserId(author == null ? null : author.id());
         danmaku.setNickname(nicknameFor(request, author));
         danmaku.setContent(request.content().trim());
@@ -132,22 +128,6 @@ public class DanmakuServiceImpl implements DanmakuService {
         danmaku.setIpHash(ipHash);
         danmakuMapper.insert(danmaku);
         return danmakuMapper.findById(danmaku.getId(), ipHash);
-    }
-
-    private ReplyTarget resolveReply(Long postId, Long targetId, String ipHash, CurrentUser author) {
-        if (targetId == null) {
-            return new ReplyTarget(null, null);
-        }
-        DanmakuVO target = danmakuMapper.findById(targetId, ipHash);
-        if (target == null || !Objects.equals(target.postId(), postId)) {
-            throw new BadRequestException("要回复的弹幕不存在");
-        }
-        if ("HIDDEN".equals(target.status()) && author == null) {
-            throw new BadRequestException("要回复的弹幕不存在");
-        }
-        Long rootId = target.parentId() == null ? target.id() : target.parentId();
-        String replyToNickname = target.parentId() == null ? target.nickname() : target.nickname();
-        return new ReplyTarget(rootId, replyToNickname);
     }
 
     private PostBodyVO requireReadable(long postId) {
@@ -183,6 +163,4 @@ public class DanmakuServiceImpl implements DanmakuService {
         }
     }
 
-    private record ReplyTarget(Long parentId, String replyToNickname) {
-    }
 }
