@@ -1,7 +1,7 @@
 package com.dayandnight.dayandnightserver.vo;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public record PostDetailVO(
@@ -9,7 +9,7 @@ public record PostDetailVO(
         Long authorId,
         String displayName,
         String content,
-        LocalDate happenedAt,
+        LocalDateTime happenedAt,
         String mood,
         String weather,
         String location,

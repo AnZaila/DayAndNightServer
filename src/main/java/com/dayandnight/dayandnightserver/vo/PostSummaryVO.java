@@ -1,11 +1,11 @@
 package com.dayandnight.dayandnightserver.vo;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public record PostSummaryVO(
         Long id,
         Long authorId,
-        LocalDate happenedAt,
+        LocalDateTime happenedAt,
         String excerpt,
         String mood,
         String weather,

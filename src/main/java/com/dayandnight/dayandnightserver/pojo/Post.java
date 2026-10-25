@@ -4,14 +4,14 @@ import com.dayandnight.dayandnightserver.dto.CreatePostDTO;
 import com.dayandnight.dayandnightserver.enums.PostStatus;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class Post {
 
     private Long id;
     private Long authorId;
     private String content;
-    private LocalDate happenedAt;
+    private LocalDateTime happenedAt;
     private String mood;
     private String weather;
     private String location;
@@ -66,11 +66,11 @@ public class Post {
         this.content = content;
     }
 
-    public LocalDate getHappenedAt() {
+    public LocalDateTime getHappenedAt() {
         return happenedAt;
     }
 
-    public void setHappenedAt(LocalDate happenedAt) {
+    public void setHappenedAt(LocalDateTime happenedAt) {
         this.happenedAt = happenedAt;
     }
 
