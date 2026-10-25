@@ -6,7 +6,7 @@
     <sql id="columns">
         d.id,
         d.post_id,
-        d.nickname,
+        case when d.user_id is null then d.nickname else coalesce(u.display_name, d.nickname) end as nickname,
         d.content,
         d.status,
         d.created_at,
@@ -21,6 +21,7 @@
         from (
             select <include refid="columns"/>
             from danmaku d
+            left join app_user u on u.id = d.user_id
             where d.post_id = #{postId}
               and d.status = 'VISIBLE'
             order by d.created_at desc, d.id desc
@@ -34,6 +35,7 @@
         from (
             select <include refid="columns"/>
             from danmaku d
+            left join app_user u on u.id = d.user_id
             where d.post_id is null
               and d.status = 'VISIBLE'
             order by d.created_at desc, d.id desc
@@ -45,6 +47,7 @@
     <select id="findRecent" resultType="com.dayandnight.dayandnightserver.vo.DanmakuVO">
         select <include refid="columns"/>
         from danmaku d
+        left join app_user u on u.id = d.user_id
         order by d.created_at desc, d.id desc
         limit 80
     </select>
@@ -52,6 +55,7 @@
     <select id="findById" resultType="com.dayandnight.dayandnightserver.vo.DanmakuVO">
         select <include refid="columns"/>
         from danmaku d
+        left join app_user u on u.id = d.user_id
         where d.id = #{id}
     </select>
 

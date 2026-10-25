@@ -6,7 +6,7 @@
     <sql id="columns">
         c.id,
         c.post_id,
-        c.nickname,
+        case when c.user_id is null then c.nickname else coalesce(u.display_name, c.nickname) end as nickname,
         c.content,
         c.status,
         c.created_at,
