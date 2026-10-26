@@ -14,7 +14,7 @@ spring:
   session:
     timeout: 14d
     jdbc:
-      initialize-schema: always
+      initialize-schema: never
   mvc:
     problemdetails:
       enabled: true
