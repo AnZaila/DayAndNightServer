@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dayandnight.dayandnightserver.mapper.StatsMapper">
+
+    <sql id="visible">
+        <if test="publicOnly">
+            and p.visibility = 'PUBLIC'
+            and p.status = 'PUBLISHED'
+        </if>
+    </sql>
+
+    <select id="countPosts" resultType="long">
+        select count(*)
+        from post p
+        where 1 = 1
+        <include refid="visible"/>
+    </select>
+
+    <select id="sumViews" resultType="long">
+        select coalesce(sum(p.view_count), 0)
+        from post p
+        where 1 = 1
+        <include refid="visible"/>
+    </select>
+
+    <select id="countLikes" resultType="long">
+        select count(*)
+        from post_like l
+        join post p on p.id = l.post_id
+        where 1 = 1
+        <include refid="visible"/>
+    </select>
+
+    <select id="countComments" resultType="long">
+        select count(*)
+        from comment c
+        join post p on p.id = c.post_id
+        where c.status = 'VISIBLE'
+        <include refid="visible"/>
+    </select>
+
+    <select id="months" resultType="com.dayandnight.dayandnightserver.vo.MonthStatVO">
+        select date_format(p.happened_at, '%Y-%m') as month,
+               count(*) as posts,
+               coalesce(sum(p.view_count), 0) as views
+        from post p
+        where 1 = 1
+        <include refid="visible"/>
+        group by date_format(p.happened_at, '%Y-%m')
+        order by month
+    </select>
+
+    <select id="moods" resultType="com.dayandnight.dayandnightserver.vo.NamedCountVO">
+        select p.mood as name, count(*) as count
+        from post p
+        where p.mood is not null
+          and p.mood != ''
+          and p.mood != 'none'
+        <include refid="visible"/>
+        group by p.mood
+        order by count desc, name
+    </select>
+</mapper>
