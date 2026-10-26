@@ -10,11 +10,12 @@
         c.content,
         c.status,
         c.created_at,
-        u.avatar_url,
+        case when c.user_id is null then c.avatar_url else u.avatar_url end as avatar_url,
         c.parent_id,
         c.reply_to_nickname,
         (select count(*) from comment_like l where l.comment_id = c.id) as like_count,
-        (select count(*) > 0 from comment_like l where l.comment_id = c.id and l.ip_hash = #{ipHash}) as liked
+        (select count(*) > 0 from comment_like l where l.comment_id = c.id and l.ip_hash = #{ipHash}) as liked,
+        c.user_id
     </sql>
 
     <sql id="recentWhere">
@@ -83,6 +84,32 @@
         <include refid="recentWhere"/>
     </select>
 
+    <sql id="authorWhere">
+        where c.user_id = #{userId}
+          and c.status = 'VISIBLE'
+          and p.status = 'PUBLISHED'
+        <if test="publicOnly">
+            and p.visibility = 'PUBLIC'
+        </if>
+    </sql>
+
+    <select id="findByAuthor" resultType="com.dayandnight.dayandnightserver.vo.CommentVO">
+        select <include refid="columns"/>
+        from comment c
+        left join app_user u on u.id = c.user_id
+        join post p on p.id = c.post_id
+        <include refid="authorWhere"/>
+        order by c.created_at desc, c.id desc
+        limit #{limit} offset #{offset}
+    </select>
+
+    <select id="countByAuthor" resultType="long">
+        select count(*)
+        from comment c
+        join post p on p.id = c.post_id
+        <include refid="authorWhere"/>
+    </select>
+
     <select id="findById" resultType="com.dayandnight.dayandnightserver.vo.CommentVO">
         select <include refid="columns"/>
         from comment c
@@ -106,9 +133,9 @@
     </select>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        insert into comment (post_id, parent_id, reply_to_nickname, nickname, content, status, ip_hash, user_id)
+        insert into comment (post_id, parent_id, reply_to_nickname, nickname, content, status, ip_hash, user_id, avatar_url)
         values (#{postId}, #{parentId,jdbcType=BIGINT}, #{replyToNickname}, #{nickname}, #{content}, #{status}, #{ipHash},
-                #{userId,jdbcType=BIGINT})
+                #{userId,jdbcType=BIGINT}, #{avatarUrl})
     </insert>
 
     <update id="updateStatus">

@@ -2,6 +2,7 @@ package com.dayandnight.dayandnightserver.service.impl;
 
 import com.dayandnight.dayandnightserver.common.CurrentUser;
 import com.dayandnight.dayandnightserver.common.CurrentUsers;
+import com.dayandnight.dayandnightserver.common.GuestAvatars;
 import com.dayandnight.dayandnightserver.common.Pages;
 import com.dayandnight.dayandnightserver.common.exception.BadRequestException;
 import com.dayandnight.dayandnightserver.common.exception.NotFoundException;
@@ -100,6 +101,9 @@ public class CommentServiceImpl implements CommentService {
                 ? "HIDDEN"
                 : "VISIBLE");
         comment.setIpHash(ipHash);
+        if (author == null) {
+            comment.setAvatarUrl(GuestAvatars.normalize(request.avatarUrl()));
+        }
         commentMapper.insert(comment);
         return commentMapper.findById(comment.getId(), ipHash);
     }
@@ -118,6 +122,19 @@ public class CommentServiceImpl implements CommentService {
         List<CommentVO> items = commentMapper.findRecent(
                 user.id(), mine, ipHash, safeSize, Pages.offset(safePage, safeSize));
         long total = commentMapper.countRecent(user.id(), mine);
+        return PageResult.of(items, total, safePage, safeSize);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResult<CommentVO> listByAuthor(long userId, int page, int size, String remoteAddress) {
+        boolean publicOnly = CurrentUsers.optional().isEmpty();
+        int safePage = Pages.page(page);
+        int safeSize = Pages.size(size, 10);
+        String ipHash = hash(remoteAddress);
+        List<CommentVO> items = commentMapper.findByAuthor(
+                userId, publicOnly, ipHash, safeSize, Pages.offset(safePage, safeSize));
+        long total = commentMapper.countByAuthor(userId, publicOnly);
         return PageResult.of(items, total, safePage, safeSize);
     }
 

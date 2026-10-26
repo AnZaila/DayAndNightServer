@@ -56,6 +56,18 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional(readOnly = true)
+    public PageResult<PostSummaryVO> listByAuthor(long authorId, int page, int size) {
+        int safePage = Pages.page(page);
+        int safeSize = Pages.size(size, 10);
+        boolean publicOnly = CurrentUsers.optional().isEmpty();
+        List<PostSummaryVO> items = postMapper.findPage(
+                publicOnly, authorId, safeSize, Pages.offset(safePage, safeSize));
+        long total = postMapper.countPage(publicOnly, authorId);
+        return PageResult.of(items, total, safePage, safeSize);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<PlaceVO> places() {
         return postMapper.findPlaced(CurrentUsers.optional().isEmpty());
     }

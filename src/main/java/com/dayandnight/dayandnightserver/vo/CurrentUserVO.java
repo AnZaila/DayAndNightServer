@@ -6,6 +6,11 @@ public record CurrentUserVO(
         String displayName,
         String avatarUrl,
         String coverUrl,
-        String signature
+        String signature,
+        String profileVisibility,
+        boolean showSignature,
+        boolean showCover,
+        boolean showEmail,
+        boolean showComments
 ) {
 }

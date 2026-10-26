@@ -11,6 +11,7 @@ public class Danmaku {
     private String content;
     private String status;
     private String ipHash;
+    private String avatarUrl;
 
     public Long getId() {
         return id;
@@ -82,5 +83,13 @@ public class Danmaku {
 
     public void setIpHash(String ipHash) {
         this.ipHash = ipHash;
+    }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
     }
 }

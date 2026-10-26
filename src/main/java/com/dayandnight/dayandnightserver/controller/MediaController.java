@@ -22,4 +22,9 @@ public class MediaController {
     public ImageVO upload(@RequestParam("file") MultipartFile file) {
         return mediaService.storeContent(file);
     }
+
+    @PostMapping("/avatar")
+    public ImageVO avatar(@RequestParam("file") MultipartFile file) {
+        return mediaService.storeGuestAvatar(file);
+    }
 }

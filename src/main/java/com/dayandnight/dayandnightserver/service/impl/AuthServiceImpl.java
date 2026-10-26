@@ -65,12 +65,13 @@ public class AuthServiceImpl implements AuthService {
         try {
             Authentication authentication = authenticationManager.authenticate(
                     UsernamePasswordAuthenticationToken.unauthenticated(email, request.password()));
-            SecurityContext context = SecurityContextHolder.createEmptyContext();
-            context.setAuthentication(authentication);
-            SecurityContextHolder.setContext(context);
-            new ChangeSessionIdAuthenticationStrategy().onAuthentication(authentication, httpRequest, httpResponse);
-            securityContextRepository.saveContext(context, httpRequest, httpResponse);
             OwnerUser owner = (OwnerUser) authentication.getPrincipal();
+            Authentication kept = kept(owner);
+            SecurityContext context = SecurityContextHolder.createEmptyContext();
+            context.setAuthentication(kept);
+            SecurityContextHolder.setContext(context);
+            new ChangeSessionIdAuthenticationStrategy().onAuthentication(kept, httpRequest, httpResponse);
+            securityContextRepository.saveContext(context, httpRequest, httpResponse);
             User user = userMapper.findById(owner.getId());
             if (user == null) {
                 throw new UnauthorizedException("请先登录");
@@ -100,6 +101,11 @@ public class AuthServiceImpl implements AuthService {
         User user = stored();
         user.setDisplayName(request.displayName().trim());
         user.setSignature(blankToNull(request.signature()));
+        user.setProfileVisibility(request.profileVisibility().name());
+        user.setShowSignature(Boolean.TRUE.equals(request.showSignature()));
+        user.setShowCover(Boolean.TRUE.equals(request.showCover()));
+        user.setShowEmail(Boolean.TRUE.equals(request.showEmail()));
+        user.setShowComments(Boolean.TRUE.equals(request.showComments()));
         save(user);
         remember(user, httpRequest, httpResponse);
         return toVo(user);
@@ -145,18 +151,21 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private void remember(User user, HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
-        OwnerUser owner = new OwnerUser(
-                user.getId(), user.getEmail(), user.getPasswordHash(), user.getDisplayName(), user.getAvatarUrl());
-        Authentication authentication = UsernamePasswordAuthenticationToken.authenticated(owner, null, owner.getAuthorities());
+        Authentication authentication = kept(new OwnerUser(
+                user.getId(), user.getEmail(), null, user.getDisplayName(), user.getAvatarUrl()));
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         context.setAuthentication(authentication);
         SecurityContextHolder.setContext(context);
         securityContextRepository.saveContext(context, httpRequest, httpResponse);
     }
 
+    private Authentication kept(OwnerUser owner) {
+        OwnerUser principal = owner.withoutSecret();
+        return UsernamePasswordAuthenticationToken.authenticated(principal, null, principal.getAuthorities());
+    }
+
     private void save(User user) {
-        userMapper.updateProfile(
-                user.getId(), user.getDisplayName(), user.getSignature(), user.getAvatarUrl(), user.getCoverUrl());
+        userMapper.updateProfile(user);
     }
 
     private CurrentUserVO toVo(User user) {
@@ -166,7 +175,12 @@ public class AuthServiceImpl implements AuthService {
                 user.getDisplayName(),
                 user.getAvatarUrl(),
                 user.getCoverUrl(),
-                user.getSignature());
+                user.getSignature(),
+                user.getProfileVisibility(),
+                user.isShowSignature(),
+                user.isShowCover(),
+                user.isShowEmail(),
+                user.isShowComments());
     }
 
     private static String blankToNull(String value) {

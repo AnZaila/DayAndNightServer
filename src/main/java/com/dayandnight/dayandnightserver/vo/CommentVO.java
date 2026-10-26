@@ -13,6 +13,7 @@ public record CommentVO(
         Long parentId,
         String replyToNickname,
         Integer likeCount,
-        Boolean liked
+        Boolean liked,
+        Long userId
 ) {
 }

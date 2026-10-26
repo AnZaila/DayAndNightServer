@@ -3,6 +3,7 @@ package com.dayandnight.dayandnightserver.common;
 import com.dayandnight.dayandnightserver.common.exception.BadRequestException;
 import com.dayandnight.dayandnightserver.config.DayAndNightProperties;
 import net.coobird.thumbnailator.Thumbnails;
+import net.coobird.thumbnailator.geometry.Positions;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -55,6 +56,35 @@ public class DiaryImages {
             paintWatermark(image, watermark);
             writeJpeg(image, target);
             return new Stored("/uploads/" + filename, image.getWidth(), image.getHeight());
+        } catch (RuntimeException | IOException exception) {
+            deleteQuietly(target);
+            if (exception instanceof BadRequestException badRequest) {
+                throw badRequest;
+            }
+            throw new BadRequestException("图片处理失败");
+        }
+    }
+
+    public Stored storeAvatar(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new BadRequestException("请选择图片");
+        }
+        String type = file.getContentType() == null ? "" : file.getContentType().toLowerCase(Locale.ROOT);
+        if (!ALLOWED.contains(type)) {
+            throw new BadRequestException("只接收 jpg、png、webp");
+        }
+        BufferedImage scaled = read(file);
+        int edge = Math.min(scaled.getWidth(), scaled.getHeight());
+        String filename = "avatar-" + UUID.randomUUID() + ".jpg";
+        Path target = uploadDirectory().resolve(filename);
+        try {
+            BufferedImage squared = Thumbnails.of(scaled)
+                    .sourceRegion(Positions.CENTER, edge, edge)
+                    .size(512, 512)
+                    .asBufferedImage();
+            Files.createDirectories(target.getParent());
+            writeJpeg(toRgb(squared), target);
+            return new Stored("/uploads/" + filename, 512, 512);
         } catch (RuntimeException | IOException exception) {
             deleteQuietly(target);
             if (exception instanceof BadRequestException badRequest) {

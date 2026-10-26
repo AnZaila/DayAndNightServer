@@ -11,6 +11,7 @@ public class Comment {
     private String status;
     private String ipHash;
     private Long userId;
+    private String avatarUrl;
 
     public Long getId() {
         return id;
@@ -82,5 +83,13 @@ public class Comment {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
     }
 }

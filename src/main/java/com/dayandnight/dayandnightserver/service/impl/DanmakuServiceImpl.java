@@ -2,6 +2,7 @@ package com.dayandnight.dayandnightserver.service.impl;
 
 import com.dayandnight.dayandnightserver.common.CurrentUser;
 import com.dayandnight.dayandnightserver.common.CurrentUsers;
+import com.dayandnight.dayandnightserver.common.GuestAvatars;
 import com.dayandnight.dayandnightserver.common.Pages;
 import com.dayandnight.dayandnightserver.common.exception.BadRequestException;
 import com.dayandnight.dayandnightserver.common.exception.NotFoundException;
@@ -140,6 +141,9 @@ public class DanmakuServiceImpl implements DanmakuService {
                 ? "HIDDEN"
                 : "VISIBLE");
         danmaku.setIpHash(ipHash);
+        if (author == null) {
+            danmaku.setAvatarUrl(GuestAvatars.normalize(request.avatarUrl()));
+        }
         danmakuMapper.insert(danmaku);
         return danmakuMapper.findById(danmaku.getId(), ipHash);
     }

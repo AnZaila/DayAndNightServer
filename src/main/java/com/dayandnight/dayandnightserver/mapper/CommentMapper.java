@@ -34,6 +34,15 @@ public interface CommentMapper {
 
     long countRecent(@Param("userId") long userId, @Param("mine") boolean mine);
 
+    List<CommentVO> findByAuthor(
+            @Param("userId") long userId,
+            @Param("publicOnly") boolean publicOnly,
+            @Param("ipHash") String ipHash,
+            @Param("limit") int limit,
+            @Param("offset") int offset);
+
+    long countByAuthor(@Param("userId") long userId, @Param("publicOnly") boolean publicOnly);
+
     CommentVO findById(@Param("id") long id, @Param("ipHash") String ipHash);
 
     int countVisitor(@Param("postId") long postId, @Param("ipHash") String ipHash, @Param("parentId") Long parentId);

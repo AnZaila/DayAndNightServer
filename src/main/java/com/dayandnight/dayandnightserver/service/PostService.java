@@ -15,6 +15,8 @@ public interface PostService {
 
     PageResult<PostSummaryVO> list(int page, int size, boolean mine);
 
+    PageResult<PostSummaryVO> listByAuthor(long authorId, int page, int size);
+
     List<PlaceVO> places();
 
     PostDetailVO get(long id);

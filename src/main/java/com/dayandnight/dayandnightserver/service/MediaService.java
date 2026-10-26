@@ -10,6 +10,8 @@ public interface MediaService {
 
     ImageVO storeContent(MultipartFile file);
 
+    ImageVO storeGuestAvatar(MultipartFile file);
+
     void delete(long postId, long mediaId);
 
     void deleteAllFiles(long postId);

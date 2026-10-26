@@ -4,10 +4,15 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 
-public class OwnerUser implements UserDetails {
+public class OwnerUser implements UserDetails, Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
 
     private final Long id;
     private final String email;
@@ -33,6 +38,10 @@ public class OwnerUser implements UserDetails {
 
     public String getAvatarUrl() {
         return avatarUrl;
+    }
+
+    public OwnerUser withoutSecret() {
+        return new OwnerUser(id, email, null, displayName, avatarUrl);
     }
 
     @Override

@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Size;
 public record CreateCommentDTO(
         @Size(max = 20, message = "昵称最多 20 个字") String nickname,
         @NotBlank(message = "写一点评论") @Size(max = 500, message = "评论最多 500 个字") String content,
-        Long parentId
+        Long parentId,
+        @Size(max = 80, message = "头像地址不对") String avatarUrl
 ) {
 }

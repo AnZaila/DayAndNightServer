@@ -13,6 +13,8 @@ public interface CommentService {
 
     PageResult<CommentVO> recent(String scope, int page, int size, String remoteAddress);
 
+    PageResult<CommentVO> listByAuthor(long userId, int page, int size, String remoteAddress);
+
     CommentVO update(long id, UpdateCommentDTO request, String remoteAddress);
 
     CommentVO toggleLike(long id, String remoteAddress);

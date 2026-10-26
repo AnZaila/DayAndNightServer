@@ -12,6 +12,8 @@ public record DanmakuVO(
         Long parentId,
         String replyToNickname,
         Integer likeCount,
-        Boolean liked
+        Boolean liked,
+        String avatarUrl,
+        Long userId
 ) {
 }

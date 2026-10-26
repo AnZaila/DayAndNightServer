@@ -67,6 +67,12 @@ public class MediaServiceImpl implements MediaService {
     }
 
     @Override
+    public ImageVO storeGuestAvatar(MultipartFile file) {
+        DiaryImages.Stored stored = diaryImages.storeAvatar(file);
+        return new ImageVO(stored.url());
+    }
+
+    @Override
     public void delete(long postId, long mediaId) {
         PostMedia media = postMediaMapper.findOwned(mediaId, postId);
         if (media == null) {

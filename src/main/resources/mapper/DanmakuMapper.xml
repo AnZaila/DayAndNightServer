@@ -13,7 +13,9 @@
         d.parent_id,
         d.reply_to_nickname,
         (select count(*) from danmaku_like l where l.danmaku_id = d.id) as like_count,
-        (select count(*) > 0 from danmaku_like l where l.danmaku_id = d.id and l.ip_hash = #{ipHash}) as liked
+        (select count(*) > 0 from danmaku_like l where l.danmaku_id = d.id and l.ip_hash = #{ipHash}) as liked,
+        case when d.user_id is null then d.avatar_url else u.avatar_url end as avatar_url,
+        d.user_id
     </sql>
 
     <sql id="visibleWhere">
@@ -63,9 +65,9 @@
     </select>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        insert into danmaku (post_id, parent_id, reply_to_nickname, user_id, nickname, content, status, ip_hash)
+        insert into danmaku (post_id, parent_id, reply_to_nickname, user_id, nickname, content, status, ip_hash, avatar_url)
         values (#{postId,jdbcType=BIGINT}, #{parentId,jdbcType=BIGINT}, #{replyToNickname}, #{userId,jdbcType=BIGINT},
-                #{nickname}, #{content}, #{status}, #{ipHash})
+                #{nickname}, #{content}, #{status}, #{ipHash}, #{avatarUrl})
     </insert>
 
     <update id="updateStatus">

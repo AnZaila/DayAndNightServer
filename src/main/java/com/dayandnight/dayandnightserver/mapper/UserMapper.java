@@ -2,7 +2,6 @@ package com.dayandnight.dayandnightserver.mapper;
 
 import com.dayandnight.dayandnightserver.pojo.User;
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
 
 @Mapper
 public interface UserMapper {
@@ -15,10 +14,5 @@ public interface UserMapper {
 
     User findById(long id);
 
-    int updateProfile(
-            @Param("id") long id,
-            @Param("displayName") String displayName,
-            @Param("signature") String signature,
-            @Param("avatarUrl") String avatarUrl,
-            @Param("coverUrl") String coverUrl);
+    int updateProfile(User user);
 }

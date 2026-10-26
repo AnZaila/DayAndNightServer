@@ -9,6 +9,11 @@ public class User {
     private String avatarUrl;
     private String coverUrl;
     private String signature;
+    private String profileVisibility;
+    private boolean showSignature;
+    private boolean showCover;
+    private boolean showEmail;
+    private boolean showComments;
     private String role;
 
     public Long getId() {
@@ -65,6 +70,46 @@ public class User {
 
     public void setSignature(String signature) {
         this.signature = signature;
+    }
+
+    public String getProfileVisibility() {
+        return profileVisibility;
+    }
+
+    public void setProfileVisibility(String profileVisibility) {
+        this.profileVisibility = profileVisibility;
+    }
+
+    public boolean isShowSignature() {
+        return showSignature;
+    }
+
+    public void setShowSignature(boolean showSignature) {
+        this.showSignature = showSignature;
+    }
+
+    public boolean isShowCover() {
+        return showCover;
+    }
+
+    public void setShowCover(boolean showCover) {
+        this.showCover = showCover;
+    }
+
+    public boolean isShowEmail() {
+        return showEmail;
+    }
+
+    public void setShowEmail(boolean showEmail) {
+        this.showEmail = showEmail;
+    }
+
+    public boolean isShowComments() {
+        return showComments;
+    }
+
+    public void setShowComments(boolean showComments) {
+        this.showComments = showComments;
     }
 
     public String getRole() {
