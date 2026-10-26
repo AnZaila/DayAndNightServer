@@ -2,6 +2,7 @@ package com.dayandnight.dayandnightserver.controller;
 
 import com.dayandnight.dayandnightserver.common.ClientAddresses;
 import com.dayandnight.dayandnightserver.service.ProfileService;
+import com.dayandnight.dayandnightserver.vo.ActivityVO;
 import com.dayandnight.dayandnightserver.vo.CommentVO;
 import com.dayandnight.dayandnightserver.vo.PageResult;
 import com.dayandnight.dayandnightserver.vo.PostSummaryVO;
@@ -39,7 +40,25 @@ public class UserController {
     public PageResult<PostSummaryVO> posts(
             @PathVariable long id,
             @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            HttpServletRequest httpRequest) {
+        return profileService.posts(id, page, size, ClientAddresses.resolve(httpRequest));
+    }
+
+    @GetMapping("/api/users/{id}/liked-posts")
+    public PageResult<PostSummaryVO> likedPosts(
+            @PathVariable long id,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            HttpServletRequest httpRequest) {
+        return profileService.likedPosts(id, page, size, ClientAddresses.resolve(httpRequest));
+    }
+
+    @GetMapping("/api/users/{id}/received")
+    public PageResult<ActivityVO> received(
+            @PathVariable long id,
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return profileService.posts(id, page, size);
+        return profileService.received(id, page, size);
     }
 }

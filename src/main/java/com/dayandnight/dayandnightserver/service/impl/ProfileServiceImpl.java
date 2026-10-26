@@ -1,13 +1,18 @@
 package com.dayandnight.dayandnightserver.service.impl;
 
+import com.dayandnight.dayandnightserver.common.CurrentUser;
 import com.dayandnight.dayandnightserver.common.CurrentUsers;
+import com.dayandnight.dayandnightserver.common.Pages;
+import com.dayandnight.dayandnightserver.common.exception.ForbiddenException;
 import com.dayandnight.dayandnightserver.common.exception.NotFoundException;
 import com.dayandnight.dayandnightserver.enums.ProfileVisibility;
+import com.dayandnight.dayandnightserver.mapper.ActivityMapper;
 import com.dayandnight.dayandnightserver.mapper.UserMapper;
 import com.dayandnight.dayandnightserver.pojo.User;
 import com.dayandnight.dayandnightserver.service.CommentService;
 import com.dayandnight.dayandnightserver.service.PostService;
 import com.dayandnight.dayandnightserver.service.ProfileService;
+import com.dayandnight.dayandnightserver.vo.ActivityVO;
 import com.dayandnight.dayandnightserver.vo.CommentVO;
 import com.dayandnight.dayandnightserver.vo.PageResult;
 import com.dayandnight.dayandnightserver.vo.PostSummaryVO;
@@ -21,11 +26,17 @@ public class ProfileServiceImpl implements ProfileService {
     private final UserMapper userMapper;
     private final CommentService commentService;
     private final PostService postService;
+    private final ActivityMapper activityMapper;
 
-    public ProfileServiceImpl(UserMapper userMapper, CommentService commentService, PostService postService) {
+    public ProfileServiceImpl(
+            UserMapper userMapper,
+            CommentService commentService,
+            PostService postService,
+            ActivityMapper activityMapper) {
         this.userMapper = userMapper;
         this.commentService = commentService;
         this.postService = postService;
+        this.activityMapper = activityMapper;
     }
 
     @Override
@@ -39,7 +50,7 @@ public class ProfileServiceImpl implements ProfileService {
     public PageResult<CommentVO> comments(long id, int page, int size, String remoteAddress) {
         User user = requireUser(id);
         ProfileVO profile = present(user);
-        if (!profile.open() || !profile.showComments()) {
+        if (!profile.open() || (!profile.showComments() && !profile.self())) {
             throw new NotFoundException("这份主页收起来了");
         }
         return commentService.listByAuthor(id, page, size, remoteAddress);
@@ -47,12 +58,40 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResult<PostSummaryVO> posts(long id, int page, int size) {
+    public PageResult<PostSummaryVO> posts(long id, int page, int size, String remoteAddress) {
         User user = requireUser(id);
         if (!present(user).open()) {
             throw new NotFoundException("这份主页收起来了");
         }
-        return postService.listByAuthor(id, page, size);
+        return postService.listByAuthor(id, page, size, remoteAddress);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResult<PostSummaryVO> likedPosts(long id, int page, int size, String remoteAddress) {
+        requireSelf(id);
+        return postService.likedBy(id, page, size, remoteAddress);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResult<ActivityVO> received(long id, int page, int size) {
+        requireSelf(id);
+        int safePage = Pages.page(page);
+        int safeSize = Pages.size(size, 10);
+        return PageResult.of(
+                activityMapper.findReceived(id, safeSize, Pages.offset(safePage, safeSize)),
+                activityMapper.countReceived(id),
+                safePage,
+                safeSize);
+    }
+
+    private void requireSelf(long id) {
+        CurrentUser current = CurrentUsers.require();
+        if (!current.id().equals(id)) {
+            throw new ForbiddenException("只能看自己的赞和收到的回应");
+        }
+        requireUser(id);
     }
 
     private User requireUser(long id) {
