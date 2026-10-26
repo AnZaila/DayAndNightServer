@@ -1,5 +1,6 @@
 package com.dayandnight.dayandnightserver.controller;
 
+import com.dayandnight.dayandnightserver.common.ClientAddresses;
 import com.dayandnight.dayandnightserver.dto.CreatePostDTO;
 import com.dayandnight.dayandnightserver.dto.UpdatePostDTO;
 import com.dayandnight.dayandnightserver.service.PostService;
@@ -7,6 +8,7 @@ import com.dayandnight.dayandnightserver.vo.MediaVO;
 import com.dayandnight.dayandnightserver.vo.PageResult;
 import com.dayandnight.dayandnightserver.vo.PostDetailVO;
 import com.dayandnight.dayandnightserver.vo.PostSummaryVO;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,13 +35,28 @@ public class PostController {
     public PageResult<PostSummaryVO> list(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "false") boolean mine) {
-        return postService.list(page, size, mine);
+            @RequestParam(defaultValue = "false") boolean mine,
+            @RequestParam(defaultValue = "false") boolean ascending,
+            HttpServletRequest httpRequest) {
+        return postService.list(page, size, mine, ascending, ClientAddresses.resolve(httpRequest));
     }
 
     @GetMapping("/{id}")
-    public PostDetailVO get(@PathVariable long id) {
-        return postService.get(id);
+    public PostDetailVO get(
+            @PathVariable long id,
+            @RequestParam(defaultValue = "true") boolean countView,
+            HttpServletRequest httpRequest) {
+        return postService.get(id, ClientAddresses.resolve(httpRequest), countView);
+    }
+
+    @PostMapping("/{id}/like")
+    public PostDetailVO like(@PathVariable long id, HttpServletRequest httpRequest) {
+        return postService.toggleLike(id, ClientAddresses.resolve(httpRequest));
+    }
+
+    @PostMapping("/{id}/pin")
+    public PostDetailVO pin(@PathVariable long id) {
+        return postService.togglePin(id);
     }
 
     @PostMapping

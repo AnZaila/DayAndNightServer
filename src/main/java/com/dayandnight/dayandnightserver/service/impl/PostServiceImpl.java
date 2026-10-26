@@ -26,6 +26,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
 import java.util.List;
 
 @Service
@@ -43,26 +47,41 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResult<PostSummaryVO> list(int page, int size, boolean mine) {
+    public PageResult<PostSummaryVO> list(int page, int size, boolean mine, boolean ascending, String remoteAddress) {
         int safePage = Pages.page(page);
         int safeSize = Pages.size(size, 10);
         boolean signedIn = CurrentUsers.optional().isPresent();
         boolean publicOnly = !signedIn;
         Long authorId = signedIn && mine ? CurrentUsers.require().id() : null;
-        List<PostSummaryVO> items = postMapper.findPage(publicOnly, authorId, safeSize, Pages.offset(safePage, safeSize));
+        String ipHash = viewerKey(remoteAddress);
+        List<PostSummaryVO> items = postMapper.findPage(
+                publicOnly, authorId, ipHash, ascending, safeSize, Pages.offset(safePage, safeSize));
         long total = postMapper.countPage(publicOnly, authorId);
         return PageResult.of(items, total, safePage, safeSize);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public PageResult<PostSummaryVO> listByAuthor(long authorId, int page, int size) {
+    public PageResult<PostSummaryVO> listByAuthor(long authorId, int page, int size, String remoteAddress) {
         int safePage = Pages.page(page);
         int safeSize = Pages.size(size, 10);
         boolean publicOnly = CurrentUsers.optional().isEmpty();
+        String ipHash = viewerKey(remoteAddress);
         List<PostSummaryVO> items = postMapper.findPage(
-                publicOnly, authorId, safeSize, Pages.offset(safePage, safeSize));
+                publicOnly, authorId, ipHash, false, safeSize, Pages.offset(safePage, safeSize));
         long total = postMapper.countPage(publicOnly, authorId);
+        return PageResult.of(items, total, safePage, safeSize);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResult<PostSummaryVO> likedBy(long userId, int page, int size, String remoteAddress) {
+        int safePage = Pages.page(page);
+        int safeSize = Pages.size(size, 10);
+        String ipHash = viewerKey(remoteAddress);
+        List<PostSummaryVO> items = postMapper.findLikedByUser(
+                userId, ipHash, safeSize, Pages.offset(safePage, safeSize));
+        long total = postMapper.countLikedByUser(userId);
         return PageResult.of(items, total, safePage, safeSize);
     }
 
@@ -73,9 +92,38 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public PostDetailVO get(long id) {
-        return assemble(requireVisible(id));
+    @Transactional
+    public PostDetailVO get(long id, String remoteAddress, boolean recordView) {
+        String ipHash = viewerKey(remoteAddress);
+        PostBodyVO body = requireVisible(id, ipHash);
+        if (recordView) {
+            postMapper.incrementViewCount(id);
+            body = postMapper.findById(id, ipHash);
+        }
+        return assemble(body);
+    }
+
+    @Override
+    @Transactional
+    public PostDetailVO toggleLike(long id, String remoteAddress) {
+        String ipHash = viewerKey(remoteAddress);
+        requireVisible(id, ipHash);
+        CurrentUser author = CurrentUsers.optional().orElse(null);
+        if (postMapper.countLike(id, ipHash) > 0) {
+            postMapper.deleteLike(id, ipHash);
+        } else {
+            postMapper.insertLike(id, ipHash, author == null ? null : author.id());
+        }
+        return assemble(postMapper.findById(id, ipHash));
+    }
+
+    @Override
+    @Transactional
+    public PostDetailVO togglePin(long id) {
+        requireVisible(id, "");
+        CurrentUsers.require();
+        postMapper.togglePinned(id);
+        return assemble(postMapper.findById(id, viewerKey("")));
     }
 
     @Override
@@ -85,13 +133,13 @@ public class PostServiceImpl implements PostService {
         Post post = Post.forInsert(author.id(), request);
         applyCoordinates(post, request.latitude(), request.longitude());
         postMapper.insert(post);
-        return get(post.getId());
+        return assemble(postMapper.findById(post.getId(), ""));
     }
 
     @Override
     @Transactional
     public PostDetailVO update(long id, UpdatePostDTO request) {
-        PostBodyVO existing = requireVisible(id);
+        PostBodyVO existing = requireVisible(id, "");
         requireAuthor(existing);
         Post post = new Post();
         post.setId(id);
@@ -105,13 +153,13 @@ public class PostServiceImpl implements PostService {
         post.setCommentsOpen(request.commentsOpen());
         applyCoordinates(post, request.latitude(), request.longitude());
         postMapper.update(post);
-        return get(id);
+        return assemble(postMapper.findById(id, ""));
     }
 
     @Override
     @Transactional
     public void delete(long id) {
-        PostBodyVO existing = requireVisible(id);
+        PostBodyVO existing = requireVisible(id, "");
         requireAuthor(existing);
         mediaService.deleteAllFiles(id);
         postMapper.delete(id);
@@ -120,14 +168,14 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional
     public MediaVO addCover(long id, MultipartFile file) {
-        requireAuthor(requireVisible(id));
+        requireAuthor(requireVisible(id, ""));
         return mediaService.storeCover(id, file);
     }
 
     @Override
     @Transactional
     public void deleteMedia(long id, long mediaId) {
-        requireAuthor(requireVisible(id));
+        requireAuthor(requireVisible(id, ""));
         mediaService.delete(id, mediaId);
     }
 
@@ -147,11 +195,16 @@ public class PostServiceImpl implements PostService {
                 postMediaMapper.findByPostId(body.id()),
                 body.authorAvatarUrl(),
                 body.latitude(),
-                body.longitude());
+                body.longitude(),
+                body.viewCount(),
+                body.likeCount(),
+                body.commentCount(),
+                body.liked(),
+                Boolean.TRUE.equals(body.pinned()));
     }
 
-    private PostBodyVO requireVisible(long id) {
-        PostBodyVO body = postMapper.findById(id);
+    private PostBodyVO requireVisible(long id, String ipHash) {
+        PostBodyVO body = postMapper.findById(id, ipHash);
         if (body == null) {
             throw new NotFoundException("这篇不存在");
         }
@@ -187,6 +240,22 @@ public class PostServiceImpl implements PostService {
         }
         post.setLatitude(latitude.setScale(6, RoundingMode.HALF_UP));
         post.setLongitude(longitude.setScale(6, RoundingMode.HALF_UP));
+    }
+
+    private String viewerKey(String remoteAddress) {
+        return CurrentUsers.optional()
+                .map(user -> hash("user:" + user.id()))
+                .orElseGet(() -> hash(remoteAddress == null ? "unknown" : remoteAddress));
+    }
+
+    private String hash(String remoteAddress) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hashed = digest.digest(("dayandnight:" + remoteAddress).getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(hashed);
+        } catch (NoSuchAlgorithmException exception) {
+            throw new IllegalStateException(exception);
+        }
     }
 
     private static String blankToNull(String value) {

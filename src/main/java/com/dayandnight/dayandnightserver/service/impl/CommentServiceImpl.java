@@ -68,7 +68,7 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional
     public CommentVO create(long postId, CreateCommentDTO request, String remoteAddress) {
-        PostBodyVO post = postMapper.findById(postId);
+        PostBodyVO post = postMapper.findById(postId, "");
         if (post == null || !isPublic(post)) {
             if (post == null || CurrentUsers.optional().isEmpty()) {
                 throw new NotFoundException("这篇不存在");
@@ -195,7 +195,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     private PostBodyVO requireReadable(long postId) {
-        PostBodyVO post = postMapper.findById(postId);
+        PostBodyVO post = postMapper.findById(postId, "");
         if (post == null) {
             throw new NotFoundException("这篇不存在");
         }

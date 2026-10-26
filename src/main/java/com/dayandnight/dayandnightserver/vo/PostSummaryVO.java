@@ -12,6 +12,11 @@ public record PostSummaryVO(
         String visibility,
         String displayName,
         String coverUrl,
-        String authorAvatarUrl
+        String authorAvatarUrl,
+        Integer viewCount,
+        Integer likeCount,
+        Integer commentCount,
+        Boolean liked,
+        Boolean pinned
 ) {
 }

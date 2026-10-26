@@ -3,6 +3,14 @@
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.dayandnight.dayandnightserver.mapper.PostMapper">
 
+    <sql id="statColumns">
+        p.view_count,
+        (select count(*) from post_like l where l.post_id = p.id) as like_count,
+        (select count(*) from comment c where c.post_id = p.id and c.status = 'VISIBLE') as comment_count,
+        (select count(*) > 0 from post_like l where l.post_id = p.id and l.ip_hash = #{ipHash}) as liked,
+        p.pinned
+    </sql>
+
     <sql id="summaryColumns">
         p.id,
         p.author_id,
@@ -13,7 +21,8 @@
         p.visibility,
         u.display_name,
         (select m.url from post_media m where m.post_id = p.id order by m.sort_order, m.id limit 1) as cover_url,
-        u.avatar_url as author_avatar_url
+        u.avatar_url as author_avatar_url,
+        <include refid="statColumns"/>
     </sql>
 
     <sql id="pageWhere">
@@ -32,7 +41,15 @@
         from post p
         join app_user u on u.id = p.author_id
         <include refid="pageWhere"/>
-        order by p.happened_at desc, p.id desc
+        order by p.pinned desc, p.pinned_at desc,
+        <choose>
+            <when test="ascending == true">
+                p.happened_at asc, p.id asc
+            </when>
+            <otherwise>
+                p.happened_at desc, p.id desc
+            </otherwise>
+        </choose>
         limit #{limit} offset #{offset}
     </select>
 
@@ -75,7 +92,8 @@
                p.comments_open,
                u.avatar_url as author_avatar_url,
                p.latitude,
-               p.longitude
+               p.longitude,
+               <include refid="statColumns"/>
         from post p
         join app_user u on u.id = p.author_id
         where p.id = #{id}
@@ -105,4 +123,54 @@
     <delete id="delete">
         delete from post where id = #{id}
     </delete>
+
+    <insert id="insertView">
+        insert into post_view (post_id, ip_hash)
+        select #{postId}, #{ipHash}
+        from dual
+        where not exists (
+            select 1 from post_view v
+            where v.post_id = #{postId} and v.ip_hash = #{ipHash}
+        )
+    </insert>
+
+    <update id="incrementViewCount">
+        update post set view_count = view_count + 1 where id = #{id}
+    </update>
+
+    <select id="countLike" resultType="int">
+        select count(*) from post_like where post_id = #{postId} and ip_hash = #{ipHash}
+    </select>
+
+    <insert id="insertLike">
+        insert into post_like (post_id, ip_hash, user_id)
+        values (#{postId}, #{ipHash}, #{userId,jdbcType=BIGINT})
+    </insert>
+
+    <delete id="deleteLike">
+        delete from post_like where post_id = #{postId} and ip_hash = #{ipHash}
+    </delete>
+
+    <update id="togglePinned">
+        update post
+        set pinned_at = if(pinned = 0, now(6), null),
+            pinned = 1 - pinned
+        where id = #{id}
+    </update>
+
+    <select id="findLikedByUser" resultType="com.dayandnight.dayandnightserver.vo.PostSummaryVO">
+        select <include refid="summaryColumns"/>
+        from post p
+        join app_user u on u.id = p.author_id
+        join post_like l on l.post_id = p.id
+        where l.user_id = #{userId}
+        order by l.created_at desc, l.id desc
+        limit #{limit} offset #{offset}
+    </select>
+
+    <select id="countLikedByUser" resultType="long">
+        select count(*)
+        from post_like l
+        where l.user_id = #{userId}
+    </select>
 </mapper>

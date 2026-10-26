@@ -149,7 +149,7 @@ public class DanmakuServiceImpl implements DanmakuService {
     }
 
     private PostBodyVO requireReadable(long postId) {
-        PostBodyVO post = postMapper.findById(postId);
+        PostBodyVO post = postMapper.findById(postId, "");
         if (post == null) {
             throw new NotFoundException("这篇不存在");
         }

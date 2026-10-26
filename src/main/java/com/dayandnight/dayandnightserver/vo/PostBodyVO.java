@@ -17,6 +17,11 @@ public record PostBodyVO(
         Boolean commentsOpen,
         String authorAvatarUrl,
         BigDecimal latitude,
-        BigDecimal longitude
+        BigDecimal longitude,
+        Integer viewCount,
+        Integer likeCount,
+        Integer commentCount,
+        Boolean liked,
+        Boolean pinned
 ) {
 }

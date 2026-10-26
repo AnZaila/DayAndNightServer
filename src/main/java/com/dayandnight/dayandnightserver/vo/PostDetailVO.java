@@ -19,6 +19,11 @@ public record PostDetailVO(
         List<MediaVO> media,
         String authorAvatarUrl,
         BigDecimal latitude,
-        BigDecimal longitude
+        BigDecimal longitude,
+        Integer viewCount,
+        Integer likeCount,
+        Integer commentCount,
+        Boolean liked,
+        Boolean pinned
 ) {
 }

@@ -13,13 +13,19 @@ import java.util.List;
 
 public interface PostService {
 
-    PageResult<PostSummaryVO> list(int page, int size, boolean mine);
+    PageResult<PostSummaryVO> list(int page, int size, boolean mine, boolean ascending, String remoteAddress);
 
-    PageResult<PostSummaryVO> listByAuthor(long authorId, int page, int size);
+    PageResult<PostSummaryVO> listByAuthor(long authorId, int page, int size, String remoteAddress);
+
+    PageResult<PostSummaryVO> likedBy(long userId, int page, int size, String remoteAddress);
 
     List<PlaceVO> places();
 
-    PostDetailVO get(long id);
+    PostDetailVO get(long id, String remoteAddress, boolean recordView);
+
+    PostDetailVO toggleLike(long id, String remoteAddress);
+
+    PostDetailVO togglePin(long id);
 
     PostDetailVO create(CreatePostDTO request);
 

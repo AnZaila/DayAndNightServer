@@ -15,6 +15,8 @@ public interface PostMapper {
     List<PostSummaryVO> findPage(
             @Param("publicOnly") boolean publicOnly,
             @Param("authorId") Long authorId,
+            @Param("ipHash") String ipHash,
+            @Param("ascending") boolean ascending,
             @Param("limit") int limit,
             @Param("offset") int offset);
 
@@ -22,11 +24,31 @@ public interface PostMapper {
 
     List<PlaceVO> findPlaced(@Param("publicOnly") boolean publicOnly);
 
-    PostBodyVO findById(long id);
+    PostBodyVO findById(@Param("id") long id, @Param("ipHash") String ipHash);
 
     int insert(Post post);
 
     int update(Post post);
 
     int delete(long id);
+
+    int insertView(@Param("postId") long postId, @Param("ipHash") String ipHash);
+
+    int incrementViewCount(long id);
+
+    int countLike(@Param("postId") long postId, @Param("ipHash") String ipHash);
+
+    int insertLike(@Param("postId") long postId, @Param("ipHash") String ipHash, @Param("userId") Long userId);
+
+    int deleteLike(@Param("postId") long postId, @Param("ipHash") String ipHash);
+
+    int togglePinned(@Param("id") long id);
+
+    List<PostSummaryVO> findLikedByUser(
+            @Param("userId") long userId,
+            @Param("ipHash") String ipHash,
+            @Param("limit") int limit,
+            @Param("offset") int offset);
+
+    long countLikedByUser(@Param("userId") long userId);
 }
