@@ -12,6 +12,7 @@ public record UpdateProfileDTO(
         @NotNull(message = "选择是否公开签名") Boolean showSignature,
         @NotNull(message = "选择是否公开背景") Boolean showCover,
         @NotNull(message = "选择是否公开邮箱") Boolean showEmail,
-        @NotNull(message = "选择是否公开留言") Boolean showComments
+        @NotNull(message = "选择是否公开留言") Boolean showComments,
+        @NotNull(message = "选择是否公开赞过") Boolean showLikes
 ) {
 }

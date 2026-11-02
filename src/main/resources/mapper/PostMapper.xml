@@ -164,6 +164,9 @@
         join app_user u on u.id = p.author_id
         join post_like l on l.post_id = p.id
         where l.user_id = #{userId}
+        <if test="publicOnly">
+            and p.visibility = 'PUBLIC' and p.status = 'PUBLISHED'
+        </if>
         order by l.created_at desc, l.id desc
         limit #{limit} offset #{offset}
     </select>
@@ -171,6 +174,10 @@
     <select id="countLikedByUser" resultType="long">
         select count(*)
         from post_like l
+        join post p on p.id = l.post_id
         where l.user_id = #{userId}
+        <if test="publicOnly">
+            and p.visibility = 'PUBLIC' and p.status = 'PUBLISHED'
+        </if>
     </select>
 </mapper>

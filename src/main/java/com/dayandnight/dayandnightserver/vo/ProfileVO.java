@@ -10,6 +10,7 @@ public record ProfileVO(
         boolean open,
         boolean self,
         boolean showComments,
+        boolean showLikes,
         String profileVisibility
 ) {
 }

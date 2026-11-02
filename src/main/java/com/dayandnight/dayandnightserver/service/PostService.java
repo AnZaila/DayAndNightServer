@@ -17,7 +17,7 @@ public interface PostService {
 
     PageResult<PostSummaryVO> listByAuthor(long authorId, int page, int size, String remoteAddress);
 
-    PageResult<PostSummaryVO> likedBy(long userId, int page, int size, String remoteAddress);
+    PageResult<PostSummaryVO> likedBy(long userId, int page, int size, boolean publicOnly, String remoteAddress);
 
     List<PlaceVO> places();
 

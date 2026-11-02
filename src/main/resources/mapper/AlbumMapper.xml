@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dayandnight.dayandnightserver.mapper.AlbumMapper">
+
+    <select id="findPage" resultType="com.dayandnight.dayandnightserver.vo.AlbumPhotoVO">
+        select *
+        from (
+            select m.id as id,
+                   'COVER' as kind,
+                   m.url as url,
+                   m.width as width,
+                   m.height as height,
+                   p.id as post_id,
+                   p.happened_at as taken_at
+            from post_media m
+            join post p on p.id = m.post_id
+            <where>
+                <if test="publicOnly">
+                    p.visibility = 'PUBLIC' and p.status = 'PUBLISHED'
+                </if>
+            </where>
+            union all
+            select a.id as id,
+                   'ALBUM' as kind,
+                   a.url as url,
+                   a.width as width,
+                   a.height as height,
+                   null as post_id,
+                   a.created_at as taken_at
+            from album_photo a
+        ) photos
+        order by photos.taken_at desc, photos.kind asc, photos.id desc
+        limit #{limit} offset #{offset}
+    </select>
+
+    <select id="countPage" resultType="long">
+        select (
+            select count(*)
+            from post_media m
+            join post p on p.id = m.post_id
+            <where>
+                <if test="publicOnly">
+                    p.visibility = 'PUBLIC' and p.status = 'PUBLISHED'
+                </if>
+            </where>
+        ) + (
+            select count(*) from album_photo
+        )
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into album_photo (user_id, url, width, height)
+        values (#{userId}, #{url}, #{width}, #{height})
+    </insert>
+
+    <select id="findById" resultType="com.dayandnight.dayandnightserver.pojo.AlbumPhoto">
+        select id, user_id, url, width, height, created_at
+        from album_photo
+        where id = #{id}
+    </select>
+
+    <delete id="delete">
+        delete from album_photo where id = #{id}
+    </delete>
+</mapper>

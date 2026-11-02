@@ -128,7 +128,7 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional(readOnly = true)
     public PageResult<CommentVO> listByAuthor(long userId, int page, int size, String remoteAddress) {
-        boolean publicOnly = CurrentUsers.optional().isEmpty();
+        boolean publicOnly = CurrentUsers.optional().map(current -> !current.id().equals(userId)).orElse(true);
         int safePage = Pages.page(page);
         int safeSize = Pages.size(size, 10);
         String ipHash = hash(remoteAddress);

@@ -106,6 +106,7 @@ public class AuthServiceImpl implements AuthService {
         user.setShowCover(Boolean.TRUE.equals(request.showCover()));
         user.setShowEmail(Boolean.TRUE.equals(request.showEmail()));
         user.setShowComments(Boolean.TRUE.equals(request.showComments()));
+        user.setShowLikes(Boolean.TRUE.equals(request.showLikes()));
         save(user);
         remember(user, httpRequest, httpResponse);
         return toVo(user);
@@ -180,7 +181,8 @@ public class AuthServiceImpl implements AuthService {
                 user.isShowSignature(),
                 user.isShowCover(),
                 user.isShowEmail(),
-                user.isShowComments());
+                user.isShowComments(),
+                user.isShowLikes());
     }
 
     private static String blankToNull(String value) {

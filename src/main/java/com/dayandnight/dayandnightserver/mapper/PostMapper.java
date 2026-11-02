@@ -47,8 +47,9 @@ public interface PostMapper {
     List<PostSummaryVO> findLikedByUser(
             @Param("userId") long userId,
             @Param("ipHash") String ipHash,
+            @Param("publicOnly") boolean publicOnly,
             @Param("limit") int limit,
             @Param("offset") int offset);
 
-    long countLikedByUser(@Param("userId") long userId);
+    long countLikedByUser(@Param("userId") long userId, @Param("publicOnly") boolean publicOnly);
 }

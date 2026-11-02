@@ -14,6 +14,7 @@ public class User {
     private boolean showCover;
     private boolean showEmail;
     private boolean showComments;
+    private boolean showLikes;
     private String role;
 
     public Long getId() {
@@ -110,6 +111,14 @@ public class User {
 
     public void setShowComments(boolean showComments) {
         this.showComments = showComments;
+    }
+
+    public boolean isShowLikes() {
+        return showLikes;
+    }
+
+    public void setShowLikes(boolean showLikes) {
+        this.showLikes = showLikes;
     }
 
     public String getRole() {

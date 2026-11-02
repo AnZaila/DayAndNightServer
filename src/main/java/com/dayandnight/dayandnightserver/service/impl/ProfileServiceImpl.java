@@ -50,7 +50,7 @@ public class ProfileServiceImpl implements ProfileService {
     public PageResult<CommentVO> comments(long id, int page, int size, String remoteAddress) {
         User user = requireUser(id);
         ProfileVO profile = present(user);
-        if (!profile.open() || (!profile.showComments() && !profile.self())) {
+        if (!profile.open()) {
             throw new NotFoundException("这份主页收起来了");
         }
         return commentService.listByAuthor(id, page, size, remoteAddress);
@@ -69,8 +69,11 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     @Transactional(readOnly = true)
     public PageResult<PostSummaryVO> likedPosts(long id, int page, int size, String remoteAddress) {
-        requireSelf(id);
-        return postService.likedBy(id, page, size, remoteAddress);
+        ProfileVO profile = present(requireUser(id));
+        if (!profile.open() || (!profile.showLikes() && !profile.self())) {
+            throw new NotFoundException("这份主页收起来了");
+        }
+        return postService.likedBy(id, page, size, !profile.self(), remoteAddress);
     }
 
     @Override
@@ -121,6 +124,7 @@ public class ProfileServiceImpl implements ProfileService {
                 open,
                 self,
                 open && user.isShowComments(),
+                open && user.isShowLikes(),
                 self ? visibility.name() : null);
     }
 

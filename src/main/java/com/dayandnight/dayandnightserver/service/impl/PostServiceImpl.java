@@ -75,13 +75,13 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResult<PostSummaryVO> likedBy(long userId, int page, int size, String remoteAddress) {
+    public PageResult<PostSummaryVO> likedBy(long userId, int page, int size, boolean publicOnly, String remoteAddress) {
         int safePage = Pages.page(page);
         int safeSize = Pages.size(size, 10);
         String ipHash = viewerKey(remoteAddress);
         List<PostSummaryVO> items = postMapper.findLikedByUser(
-                userId, ipHash, safeSize, Pages.offset(safePage, safeSize));
-        long total = postMapper.countLikedByUser(userId);
+                userId, ipHash, publicOnly, safeSize, Pages.offset(safePage, safeSize));
+        long total = postMapper.countLikedByUser(userId, publicOnly);
         return PageResult.of(items, total, safePage, safeSize);
     }
 

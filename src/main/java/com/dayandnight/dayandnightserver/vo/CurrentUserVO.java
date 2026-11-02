@@ -11,6 +11,7 @@ public record CurrentUserVO(
         boolean showSignature,
         boolean showCover,
         boolean showEmail,
-        boolean showComments
+        boolean showComments,
+        boolean showLikes
 ) {
 }

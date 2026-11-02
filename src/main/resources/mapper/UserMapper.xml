@@ -14,14 +14,14 @@
 
     <select id="findByEmail" resultType="com.dayandnight.dayandnightserver.pojo.User">
         select id, email, password_hash, display_name, avatar_url, cover_url, signature,
-               profile_visibility, show_signature, show_cover, show_email, show_comments, role
+               profile_visibility, show_signature, show_cover, show_email, show_comments, show_likes, role
         from app_user
         where email = #{email}
     </select>
 
     <select id="findById" resultType="com.dayandnight.dayandnightserver.pojo.User">
         select id, email, password_hash, display_name, avatar_url, cover_url, signature,
-               profile_visibility, show_signature, show_cover, show_email, show_comments, role
+               profile_visibility, show_signature, show_cover, show_email, show_comments, show_likes, role
         from app_user
         where id = #{id}
     </select>
@@ -36,7 +36,8 @@
             show_signature = #{showSignature},
             show_cover = #{showCover},
             show_email = #{showEmail},
-            show_comments = #{showComments}
+            show_comments = #{showComments},
+            show_likes = #{showLikes}
         where id = #{id}
     </update>
 </mapper>
