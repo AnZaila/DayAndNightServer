@@ -7,6 +7,7 @@ public record PostBodyVO(
         Long id,
         Long authorId,
         String displayName,
+        String title,
         String content,
         LocalDateTime happenedAt,
         String mood,

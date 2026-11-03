@@ -10,6 +10,7 @@ public class Post {
 
     private Long id;
     private Long authorId;
+    private String title;
     private String content;
     private LocalDateTime happenedAt;
     private String mood;
@@ -24,6 +25,7 @@ public class Post {
     public static Post forInsert(long authorId, CreatePostDTO request) {
         Post post = new Post();
         post.authorId = authorId;
+        post.title = request.title().trim();
         post.content = request.content().trim();
         post.happenedAt = request.happenedAt();
         post.mood = blankToNull(request.mood());
@@ -56,6 +58,14 @@ public class Post {
 
     public void setAuthorId(Long authorId) {
         this.authorId = authorId;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     public String getContent() {

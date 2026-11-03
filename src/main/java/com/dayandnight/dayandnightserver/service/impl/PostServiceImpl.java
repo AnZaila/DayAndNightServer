@@ -143,6 +143,7 @@ public class PostServiceImpl implements PostService {
         requireAuthor(existing);
         Post post = new Post();
         post.setId(id);
+        post.setTitle(request.title().trim());
         post.setContent(request.content().trim());
         post.setHappenedAt(request.happenedAt());
         post.setMood(blankToNull(request.mood()));
@@ -184,6 +185,7 @@ public class PostServiceImpl implements PostService {
                 body.id(),
                 body.authorId(),
                 body.displayName(),
+                body.title(),
                 body.content(),
                 body.happenedAt(),
                 body.mood(),

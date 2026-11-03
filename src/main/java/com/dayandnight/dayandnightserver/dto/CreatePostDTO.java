@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public record CreatePostDTO(
+        @NotBlank(message = "写一个标题") @Size(max = 80, message = "标题太长了") String title,
         @NotBlank(message = "写一点内容") @Size(max = 20000, message = "正文太长了") String content,
         @NotNull(message = "选一个发生时间") LocalDateTime happenedAt,
         @Size(max = 32, message = "心情太长了") String mood,

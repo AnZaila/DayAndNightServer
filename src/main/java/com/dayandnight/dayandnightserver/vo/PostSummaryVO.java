@@ -6,6 +6,7 @@ public record PostSummaryVO(
         Long id,
         Long authorId,
         LocalDateTime happenedAt,
+        String title,
         String excerpt,
         String mood,
         String weather,
