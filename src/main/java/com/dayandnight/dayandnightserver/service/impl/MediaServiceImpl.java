@@ -3,7 +3,6 @@ package com.dayandnight.dayandnightserver.service.impl;
 import com.dayandnight.dayandnightserver.common.CurrentUser;
 import com.dayandnight.dayandnightserver.common.CurrentUsers;
 import com.dayandnight.dayandnightserver.common.DiaryImages;
-import com.dayandnight.dayandnightserver.common.exception.BadRequestException;
 import com.dayandnight.dayandnightserver.common.exception.NotFoundException;
 import com.dayandnight.dayandnightserver.mapper.PostMediaMapper;
 import com.dayandnight.dayandnightserver.mapper.SiteSettingMapper;
@@ -14,9 +13,6 @@ import com.dayandnight.dayandnightserver.vo.ImageVO;
 import com.dayandnight.dayandnightserver.vo.MediaVO;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 public class MediaServiceImpl implements MediaService {
@@ -39,20 +35,10 @@ public class MediaServiceImpl implements MediaService {
             PostMedia media = new PostMedia();
             media.setPostId(postId);
             media.setUrl(stored.url());
-            media.setSortOrder(0);
+            media.setSortOrder(postMediaMapper.nextSort(postId));
             media.setWidth(stored.width());
             media.setHeight(stored.height());
             postMediaMapper.insert(media);
-            List<String> previous = new ArrayList<>();
-            for (MediaVO item : postMediaMapper.findByPostId(postId)) {
-                if (!item.id().equals(media.getId())) {
-                    previous.add(item.url());
-                    postMediaMapper.delete(item.id());
-                }
-            }
-            for (String url : previous) {
-                diaryImages.delete(url);
-            }
             return new MediaVO(media.getId(), media.getUrl(), media.getWidth(), media.getHeight());
         } catch (RuntimeException exception) {
             diaryImages.delete(stored.url());
